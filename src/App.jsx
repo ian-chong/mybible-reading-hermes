@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { fetchChapter } from './utils/bibleApi';
-import { addDays, differenceInCalendarDays, isToday, isPast, format } from 'date-fns';
+import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from 'date-fns';
 
 const books = [
   { name: 'Genesis', chapters: 50 },
@@ -87,26 +87,26 @@ function isChapterCompleted(bookName, chapterNum, completed) {
   return completed[bookName] && completed[bookName].includes(chapterNum);
 }
 
+// Both helpers return a new object so React sees the state change and re-renders.
 function addCompleted(bookName, chapterNum, completed) {
-  if (!completed[bookName]) {
-    completed[bookName] = [];
-  }
-  if (!completed[bookName].includes(chapterNum)) {
-    completed[bookName] = [...completed[bookName], chapterNum].sort((a, b) => a - b);
-  }
-  setCompleted(completed);
-  return completed;
+  const chapters = completed[bookName] || [];
+  if (chapters.includes(chapterNum)) return completed;
+  const next = { ...completed, [bookName]: [...chapters, chapterNum].sort((a, b) => a - b) };
+  setCompleted(next);
+  return next;
 }
 
 function removeCompleted(bookName, chapterNum, completed) {
-  if (completed[bookName]) {
-    completed[bookName] = completed[bookName].filter(c => c !== chapterNum);
-    if (completed[bookName].length === 0) {
-      delete completed[bookName];
-    }
-    setCompleted(completed);
+  if (!completed[bookName]) return completed;
+  const next = { ...completed };
+  const chapters = completed[bookName].filter(c => c !== chapterNum);
+  if (chapters.length === 0) {
+    delete next[bookName];
+  } else {
+    next[bookName] = chapters;
   }
-  return completed;
+  setCompleted(next);
+  return next;
 }
 
 function getTotalChapters() {
@@ -127,19 +127,19 @@ function getRemainingChapters(completed) {
 }
 
 function computeReadingPlan(completed, deadlineStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  let deadline = new Date(deadlineStr);
-  deadline.setHours(0, 0, 0, 0);
-  
-  // If deadline is in the past, set it to today (or maybe next year?)
-  // For simplicity, if past, we'll set deadline to today + 14 days as a fallback
-  if (isPast(deadline)) {
+  const today = startOfDay(new Date());
+
+  // parseISO reads "YYYY-MM-DD" as local midnight (new Date() would read it as UTC)
+  let deadline = parseISO(deadlineStr);
+
+  // If the deadline is before today (or the input is cleared), fall back to today + 14 days.
+  // A deadline of today itself is kept.
+  if (Number.isNaN(deadline.getTime()) || differenceInCalendarDays(deadline, today) < 0) {
     deadline = addDays(today, 14);
   }
   
-  const daysLeft = differenceInCalendarDays(deadline, today);
+  // Count today as a reading day, so a deadline of today still leaves 1 day.
+  const daysLeft = differenceInCalendarDays(deadline, today) + 1;
   const chaptersLeft = getRemainingChapters(completed);
   
   if (daysLeft <= 0 || chaptersLeft === 0) {
@@ -163,58 +163,44 @@ function App() {
   const [deadline, setDeadline] = useState(DEFAULT_DEADLINE);
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedChapter, setSelectedChapter] = useState(null);
-  const [chapterText, setChapterText] = useState('');
+  const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    setCompletedState(getCompleted());
-  }, []); // Only run once on mount
-  
-  useEffect(() => {
-    // Whenever completed or deadline changes, we could recalculate plan
-    // But we'll compute it in the render
-  }, [completed, deadline]);
-  
+
   const handleBookSelect = (book) => {
     setSelectedBook(book);
     setSelectedChapter(null);
-    setChapterText('');
+    setVerses([]);
     setError(null);
   };
-  
+
   const handleChapterSelect = async (chapter) => {
     if (!selectedBook) return;
-    
+
     setSelectedChapter(chapter);
-    setChapterText('Loading...');
+    setVerses([]);
     setError(null);
     setLoading(true);
-    
+
     try {
       const result = await fetchChapter(selectedBook.name, chapter);
-      setChapterText(result.text);
+      setVerses(result.verses);
     } catch (err) {
-      setError('Failed to load chapter text');
-      setChapterText(`Error loading ${selectedBook.name} ${chapter}`);
+      console.error('Error fetching chapter:', err);
+      setError(`Could not load ${selectedBook.name} ${chapter}. Check your connection and try again.`);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleToggleChapter = (chapter) => {
     if (!selectedBook) return;
-    
+
     const newCompleted = isChapterCompleted(selectedBook.name, chapter, completed)
       ? removeCompleted(selectedBook.name, chapter, completed)
       : addCompleted(selectedBook.name, chapter, completed);
-    
+
     setCompletedState(newCompleted);
-    
-    // If we were viewing this chapter and unchecked it, maybe clear text?
-    if (selectedChapter === chapter && !isChapterCompleted(selectedBook.name, chapter, newCompleted)) {
-      setChapterText('Select a chapter to view.');
-    }
   };
   
   const handleDeadlineChange = (e) => {
@@ -240,12 +226,12 @@ function App() {
   }
   
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
       {/* Using the design system's suggested layout: a 12-column grid */}
       <div className="grid grid-cols-12 gap-4">
         {/* Hero Section (spans full width) */}
         <header className="col-span-12 text-center py-8">
-          <h1 className="font-display text-5xl font-bold text-foreground">
+          <h1 className="font-display text-3xl sm:text-5xl font-bold text-foreground">
             Bible Reading Planner
           </h1>
           <p className="font-serif text-lg text-muted-foreground mt-2">
@@ -254,7 +240,7 @@ function App() {
         </header>
 
         {/* Date Input Section (spans full width) */}
-        <div className="col-span-12 flex justify-center items-center py-4">
+        <div className="col-span-12 flex flex-wrap justify-center items-center gap-y-2 py-4">
           <label className="font-serif text-lg text-foreground mr-4">
             Target Completion Date
           </label>
@@ -281,22 +267,22 @@ function App() {
           <div className="col-span-12 bg-card rounded-lg p-6">
             <h2 className="font-serif text-xl font-bold text-foreground mb-4">
               Reading Plan
-            </div>
+            </h2>
             <p className="font-serif text-muted-foreground mb-2">
               Chapters remaining: <span className="text-foreground font-bold">{chaptersLeft}</span>
             </p>
             <p className="font-serif text-muted-foreground mb-2">
-              Suggested per day: <span className="text-foreground font-bold">{dailyChapters}</span> 
+              Suggested per day: <span className="text-foreground font-bold">{dailyChapters}</span>{' '}
               chapter{dailyChapters !== 1 ? 's' : ''}
               {remainder > 0 && (
                 <> (+1 for first <span className="font-semibold">{remainder}</span> day{remainder !== 1 ? 's' : ''})</>
               )}
             </p>
             <p className="font-serif text-muted-foreground mb-4">
-              Plan for next <span className="font-semibold">{Math.min(7, daysLeft)}</span> 
+              Plan for next <span className="font-semibold">{Math.min(7, daysLeft)}</span>{' '}
               day{Math.min(7, daysLeft) !== 1 ? 's' : ''}:
             </p>
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
               {plan.map((day, index) => (
                 <div key={index} className="bg-muted rounded-lg p-4 text-center">
                   <span className="font-mono text-xs text-muted-foreground block">
@@ -326,7 +312,7 @@ function App() {
         )}
 
         {/* Book List (spans 3 columns) */}
-        <section className="col-span-3 bg-card rounded-lg p-6">
+        <section className="col-span-12 md:col-span-6 lg:col-span-3 bg-card rounded-lg p-6">
           <h2 className="font-serif text-xl font-bold text-foreground mb-4">
             Books of the Bible
           </h2>
@@ -334,14 +320,13 @@ function App() {
             {books.map((book) => {
               const completedChapters = completed[book.name] || [];
               const isCompleted = completedChapters.length === book.chapters;
-              const progress = `${completedChapters.length}/${book.chapters}`;
+              const progress = completedChapters.length + '/' + book.chapters;
               
               return (
                 <div 
                   key={book.name} 
                   onClick={() => handleBookSelect(book)}
-                  className={`cursor-pointer flex items-start p-4 border border-muted rounded-lg hover:bg-muted/50 transition-colors duration-200 
-                    ${selectedBook === book ? 'border-primary bg-primary/5' : ''}`}
+                  className={`cursor-pointer flex items-start p-4 border border-muted rounded-lg hover:bg-muted/50 transition-colors duration-200 ${selectedBook === book ? 'border-primary bg-primary/5' : ''}`}
                 >
                   <div className="flex-0 mr-4">
                     {isCompleted ? (
@@ -361,8 +346,8 @@ function App() {
                     <div className="mt-2 flex items-center space-x-2 text-sm">
                       <div className="w-2.5 h-2.5 bg-primary rounded-full mr-1.5"></div>
                       <span className="text-muted-foreground">{progress} chapters</span>
-                      <div className="w-2.5 h-2.5 bg-muted/50 rounded-full ml-1.5"></div>
-                      <div className="w-2.5 h-2.5 {isCompleted ? 'bg-primary' : 'bg-muted/20'} rounded-full"></div>
+                      <div className="w-2.5 h-2.5 bg-muted/50 rounded-full ml-2 mr-1.5"></div>
+                      <div className={'w-2.5 h-2.5 ' + (isCompleted ? 'bg-primary' : 'bg-muted/20') + ' rounded-full'}></div>
                     </div>
                   </div>
                   <div className="flex-0 ml-4">
@@ -370,12 +355,13 @@ function App() {
                   </div>
                 </div>
               );
-            }}
+            })
+          }
           </div>
         </section>
 
         {/* Chapter List (spans 3 columns) */}
-        <section className={selectedBook ? 'col-span-3 bg-card rounded-lg p-6' : 'col-span-3 bg-card rounded-lg p-6 hidden'}>
+        <section className={selectedBook ? 'col-span-12 md:col-span-6 lg:col-span-3 bg-card rounded-lg p-6' : 'hidden'}>
           {selectedBook && (
             <>
               <h2 className="font-serif text-xl font-bold text-foreground mb-4">
@@ -388,11 +374,7 @@ function App() {
                     <button
                       key={chapter}
                       onClick={() => handleChapterSelect(chapter)}
-                      className={`w-full text-center p-3 border border-muted rounded-lg 
-                        hover:bg-muted/50 
-                        ${selectedChapter === chapter ? 'border-primary bg-primary/5' : ''}
-                        ${done ? 'bg-primary/20' : ''}
-                        transition-colors duration-200`}
+                      className={`w-full text-center p-3 border border-muted rounded-lg hover:bg-muted/50 ${selectedChapter === chapter ? 'border-primary bg-primary/5' : ''} ${done ? 'bg-primary/20' : ''} transition-colors duration-200`}
                     >
                       <div className="flex flex-col items-center space-y-1">
                         <div className="text-xl font-bold text-foreground">
@@ -406,14 +388,15 @@ function App() {
                       </div>
                     </button>
                   );
-                })}
-              </div>
+                })
+                }
+                </div>
             </>
           )}
         </section>
 
         {/* Content Viewer (spans 6 columns) */}
-        <section className="col-span-6 bg-card rounded-lg p-6">
+        <section className={`col-span-12 ${selectedBook ? 'lg:col-span-6' : 'lg:col-span-9'} bg-card rounded-lg p-6`}>
           <h2 className="font-serif text-xl font-bold text-foreground mb-4">
             {selectedBook && selectedChapter ? 
               `${selectedBook.name} Chapter ${selectedChapter}` : 
@@ -421,10 +404,10 @@ function App() {
           </h2>
           
           {error && (
-            <div className="mb-4 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg">
+            <div className="mb-6 p-5 bg-destructive/10 border border-destructive/20 rounded-xl">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center text-xs">
+                  <div className="w-5 h-5 bg-destructive text-on-destructive rounded-full flex items-center justify-center text-xs">
                     !
                   </div>
                 </div>
@@ -436,32 +419,37 @@ function App() {
             </div>
           )}
           
-          {loading && !chapterText && (
+          {loading && (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="mt-4 text-lg text-muted-foreground">Loading chapter...</p>
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+              <p className="mt-4 text-foreground/80 text-lg">Loading chapter...</p>
             </div>
           )}
           
-          {!loading && chapterText && (
-            <div className="prose prose-lg max-w-none py-6">
-              {chapterText.split('\n\n').map((paragraph, index) => (
-                <p key={index} className="mb-6 text-foreground leading-relaxed">{paragraph}</p>
-              ))}
+          {!loading && verses.length > 0 && (
+            <div className="prose prose-lg max-w-none py-2 font-serif text-card-foreground">
+              <p className="leading-relaxed">
+                {verses.map((v) => (
+                  <span key={v.verse}>
+                    <sup className="mr-1 font-sans text-xs text-muted-foreground">{v.verse}</sup>
+                    {v.text}{' '}
+                  </span>
+                ))}
+              </p>
             </div>
           )}
           
-          {!loading && !chapterText && !error && (
+          {!loading && verses.length === 0 && !error && (
             <div className="text-center py-16">
               <div className="flex items-center justify-center mb-6">
-                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center text-4xl text-muted-foreground">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center text-4xl text-muted-foreground/80">
                   📖
                 </div>
               </div>
               <p className="font-serif text-xl font-bold text-foreground mb-4">
                 Select a chapter to begin reading
               </p>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="text-muted-foreground max-w-2xl mx-auto">
                 Choose a book from the left and a chapter from the middle to start your Bible reading journey.
               </p>
             </div>
@@ -472,14 +460,12 @@ function App() {
             <div className="mt-6 flex items-center space-x-4">
               <button
                 onClick={() => handleToggleChapter(selectedChapter)}
-                className={`flex-1 px-6 py-3 font-medium rounded-xl 
-                  bg-${isChapterCompleted(selectedBook.name, selectedChapter, completed) ? 'muted/20' : 'primary'} 
-                  text-${isChapterCompleted(selectedBook.name, selectedChapter, completed) ? 'foreground' : 'on-primary'} 
-                  hover:bg-${isChapterCompleted(selectedBook.name, selectedChapter, completed) ? 'muted/30' : 'primary/80'} 
-                  hover:text-${isChapterCompleted(selectedBook.name, selectedChapter, completed) ? 'foreground' : 'on-primary'}
-                  transition-all duration-200 shadow-md
-                  hover:shadow-lg
-                  transform hover:-translate-y-1`}
+                // Full class names only: Tailwind can't detect classes assembled from `bg-${...}`
+                className={`flex-1 px-6 py-3 font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-1 ${
+                  isChapterCompleted(selectedBook.name, selectedChapter, completed)
+                    ? 'bg-muted text-foreground border border-border hover:bg-border'
+                    : 'bg-primary text-on-primary hover:bg-primary/80'
+                }`}
               >
                 {isChapterCompleted(selectedBook.name, selectedChapter, completed) ? 'Mark as Incomplete' : 'Mark as Complete'}
               </button>
@@ -488,12 +474,12 @@ function App() {
         </section>
       </div>
 
-      {/* Pre-delivery checklist from the design system (as a footer note) */}
-      <footer className="mt-12 text-center text-muted-foreground text-sm border-t border-muted/20 pt-8">
+      {/* Footer with design system attribution */}
+      <footer className="mt-12 text-center text-muted-foreground text-sm border-t border-muted pt-8">
         <p className="flex items-center justify-center space-x-2 text-sm">
           Bible Reading Planner • Built with React & Tailwind CSS • Data stored locally
         </p>
-        <p className="mt-2 text-xs">
+        <p className="mt-2 text-xs text-muted-foreground">
           Design system applied: Swiss Modernism 2.0 • Cormorant Garamond / Crimson Pro • {new Date().getFullYear()}
         </p>
       </footer>

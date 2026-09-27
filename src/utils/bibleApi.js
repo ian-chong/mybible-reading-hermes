@@ -1,27 +1,21 @@
 // src/utils/bibleApi.js
-// Fetch Bible text from a free API (bible-api.com) which provides ASV (public domain)
+// Fetch Bible text from a free API (bible-api.com), which serves the World English Bible by default.
 // For NKJV/NIV/KJV we may need to fallback to another source or bundle text.
 // For now, we'll use bible-api.com and note the limitation.
 
-export async function fetchVerse(reference) {
-  try {
-    const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data = await response.json();
-    // data.verses is an array; combine text
-    const text = data.verses.map(v => v.text.trim()).join(' ');
-    return { reference: data.reference, text };
-  } catch (error) {
-    console.error('Error fetching verse:', error);
-    return { reference, text: `Unable to load passage: ${reference}` };
+// Returns { reference, verses: [{ verse, text }] }. Throws on network/HTTP errors
+// so the caller can show an error state.
+export async function fetchPassage(reference) {
+  const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
   }
+  const data = await response.json();
+  const verses = data.verses.map(v => ({ verse: v.verse, text: v.text.trim() }));
+  return { reference: data.reference, verses };
 }
 
-// For multiple verses or whole chapter, we can fetch per verse but that's many requests.
-// For simplicity, we'll fetch the whole chapter via bible-api.com? It returns verses array.
+// bible-api.com returns every verse of a chapter when given "Book N".
 export async function fetchChapter(bookName, chapterNum) {
-  const reference = `${bookName} ${chapterNum}`;
-  return fetchVerse(reference);
+  return fetchPassage(`${bookName} ${chapterNum}`);
 }
