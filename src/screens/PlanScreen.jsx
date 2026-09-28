@@ -2,6 +2,7 @@ import { format, isToday } from 'date-fns';
 import AppBar from '../components/AppBar';
 import { TOTAL_CHAPTERS } from '../data/books';
 import { dayKey } from '../lib/progress';
+import { TRANSLATION } from '../utils/bibleApi';
 
 const card = 'rounded-2xl border border-border bg-card p-5';
 
@@ -69,7 +70,7 @@ export default function PlanScreen({ deadline, onDeadlineChange, plan }) {
         )}
 
         <p className="px-1 text-center text-xs text-muted-foreground">
-          Progress is saved on this device only. Scripture text: World English Bible via bible-api.com.
+          Progress is saved on this device only. Scripture text: {TRANSLATION} via bible-api.com.
         </p>
       </div>
     </>

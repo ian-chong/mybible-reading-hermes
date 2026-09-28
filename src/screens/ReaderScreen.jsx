@@ -4,7 +4,7 @@ import AppBar from '../components/AppBar';
 import { adjacentChapter, isChapterRead } from '../lib/progress';
 import Link from '../components/Link';
 import { paths } from '../lib/router';
-import { fetchChapter } from '../utils/bibleApi';
+import { TRANSLATION, fetchChapter } from '../utils/bibleApi';
 
 // Rendered with key={book+chapter}, so state starts fresh for every chapter.
 export default function ReaderScreen({ book, chapter, completed, onToggle }) {
@@ -39,7 +39,7 @@ export default function ReaderScreen({ book, chapter, completed, onToggle }) {
 
   return (
     <>
-      <AppBar title={`${book.name} ${chapter}`} subtitle="World English Bible" backTo={paths.book(book.name)} />
+      <AppBar title={`${book.name} ${chapter}`} subtitle={TRANSLATION} backTo={paths.book(book.name)} />
 
       <article className="mx-auto max-w-[38rem] px-5 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6">
         {result.status === 'loading' && <ChapterSkeleton />}
