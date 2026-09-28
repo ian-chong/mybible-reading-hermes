@@ -15,7 +15,18 @@ export async function fetchPassage(reference) {
   return { reference: data.reference, verses };
 }
 
+// Chapters are cached for the session, so going back/forward between chapters is instant.
+// Failed requests are dropped from the cache so they can be retried.
+const cache = new Map();
+
 // bible-api.com returns every verse of a chapter when given "Book N".
-export async function fetchChapter(bookName, chapterNum) {
-  return fetchPassage(`${bookName} ${chapterNum}`);
+export function fetchChapter(bookName, chapterNum) {
+  const reference = `${bookName} ${chapterNum}`;
+  if (!cache.has(reference)) {
+    cache.set(reference, fetchPassage(reference).catch((error) => {
+      cache.delete(reference);
+      throw error;
+    }));
+  }
+  return cache.get(reference);
 }

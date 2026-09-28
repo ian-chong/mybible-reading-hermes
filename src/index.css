@@ -1,3 +1,70 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
-@config "../tailwind.config.js";
+
+/* Semantic colour tokens. Light values here, dark values below.
+   Text pairs meet WCAG AA (4.5:1): primary/on-primary, success/on-success, muted-foreground on card. */
+@theme {
+  --color-background: #fffbeb;
+  --color-card: #ffffff;
+  --color-foreground: #1c1917;
+  --color-muted: #f5efe3;
+  --color-muted-foreground: #57534e;
+  --color-border: #e7dfcf;
+  --color-primary: #b45309;
+  --color-on-primary: #ffffff;
+  --color-success: #047857;
+  --color-on-success: #ffffff;
+  --color-destructive: #b91c1c;
+  --color-ring: #b45309;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-reading: "Crimson Pro", Georgia, serif;
+  --font-display: "Cinzel", serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #14110f;
+    --color-card: #1f1b18;
+    --color-foreground: #f5f0e6;
+    --color-muted: #2a2521;
+    --color-muted-foreground: #b3aca4;
+    --color-border: #3a332d;
+    --color-primary: #f59e0b;
+    --color-on-primary: #1c1917;
+    --color-success: #34d399;
+    --color-on-success: #052e22;
+    --color-destructive: #f87171;
+    --color-ring: #f59e0b;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  a,
+  button {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
