@@ -15,13 +15,12 @@ export async function fetchPassage(reference) {
   return { reference: data.reference, verses };
 }
 
-// Chapters are cached for the session, so going back/forward between chapters is instant.
+// Passages are cached for the session, so going back/forward between chapters is instant.
 // Failed requests are dropped from the cache so they can be retried.
 const cache = new Map();
 
-// bible-api.com returns every verse of a chapter when given "Book N".
-export function fetchChapter(bookName, chapterNum) {
-  const reference = `${bookName} ${chapterNum}`;
+// Any reference bible-api.com understands: "Genesis 1", "Exodus 2:1-10", "John 3:16-21".
+export function fetchCachedPassage(reference) {
   if (!cache.has(reference)) {
     cache.set(reference, fetchPassage(reference).catch((error) => {
       cache.delete(reference);
@@ -29,4 +28,9 @@ export function fetchChapter(bookName, chapterNum) {
     }));
   }
   return cache.get(reference);
+}
+
+// bible-api.com returns every verse of a chapter when given "Book N".
+export function fetchChapter(bookName, chapterNum) {
+  return fetchCachedPassage(`${bookName} ${chapterNum}`);
 }

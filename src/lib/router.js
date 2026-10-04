@@ -7,16 +7,21 @@ export const paths = {
   bible: '#/bible',
   book: (name) => `#/bible/${encodeURIComponent(name)}`,
   read: (name, chapter) => `#/read/${encodeURIComponent(name)}/${chapter}`,
+  stories: '#/stories',
+  story: (id) => `#/stories/${encodeURIComponent(id)}`,
+  storyStep: (id, step) => `#/stories/${encodeURIComponent(id)}/${step}`,
   plan: '#/plan',
 };
 
 export function parseRoute(hash) {
-  const [section = '', book, chapter] = hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
+  const [section = '', first, second] = hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
   switch (section) {
     case 'bible':
-      return { section: 'bible', book };
+      return { section: 'bible', book: first };
     case 'read':
-      return { section: 'read', book, chapter: Number(chapter) };
+      return { section: 'read', book: first, chapter: Number(second) };
+    case 'stories':
+      return { section: 'stories', storyId: first, step: Number(second) };
     case 'plan':
       return { section: 'plan' };
     default:

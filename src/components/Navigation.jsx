@@ -1,10 +1,11 @@
-import { BookOpenText, CalendarCheck, SunHorizon } from '@phosphor-icons/react';
+import { BookOpenText, CalendarCheck, Scroll, SunHorizon } from '@phosphor-icons/react';
 import Link from './Link';
 import { paths } from '../lib/router';
 
 const tabs = [
   { id: 'today', label: 'Today', to: paths.today, Icon: SunHorizon },
   { id: 'bible', label: 'Bible', to: paths.bible, Icon: BookOpenText },
+  { id: 'stories', label: 'Stories', to: paths.stories, Icon: Scroll },
   { id: 'plan', label: 'Plan', to: paths.plan, Icon: CalendarCheck },
 ];
 
@@ -15,7 +16,7 @@ export function TabBar({ active }) {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {tabs.map(({ id, label, to, Icon }) => {
           const isActive = id === active;
           return (
