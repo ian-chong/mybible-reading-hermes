@@ -6,11 +6,13 @@ import { computePlan, loadDeadline, loadProgress, saveDeadline, saveProgress, to
 import { loadStories, markStepRead, resetStory, saveStories, stripNewlyMarked } from './lib/stories';
 import { useRoute, useScrollRestoration } from './lib/router';
 import BibleScreen from './screens/BibleScreen';
+import ExploreScreen from './screens/ExploreScreen';
 import PlanScreen from './screens/PlanScreen';
 import ReaderScreen from './screens/ReaderScreen';
 import StoriesScreen from './screens/StoriesScreen';
 import StoryScreen from './screens/StoryScreen';
 import StoryStepScreen from './screens/StoryStepScreen';
+import TimelineScreen from './screens/TimelineScreen';
 import TodayScreen from './screens/TodayScreen';
 
 function App() {
@@ -60,7 +62,13 @@ function App() {
   const story = route.storyId ? storyById.get(route.storyId) : undefined;
   const isReader = route.section === 'read' && book && route.chapter >= 1 && route.chapter <= book.chapters;
   const isStoryStep = route.section === 'stories' && story && route.step >= 1 && route.step <= story.steps.length;
-  const activeTab = isReader || route.section === 'bible' ? 'bible' : route.section === 'stories' ? 'stories' : route.section;
+  // Stories and Timeline are reading methods inside Explore.
+  const activeTab =
+    isReader || route.section === 'bible'
+      ? 'bible'
+      : ['explore', 'stories', 'timeline'].includes(route.section)
+        ? 'explore'
+        : route.section;
 
   let screen;
   if (isReader) {
@@ -81,6 +89,10 @@ function App() {
     screen = <StoryScreen story={story} stories={stories} onReset={handleResetStory} />;
   } else if (route.section === 'stories') {
     screen = <StoriesScreen stories={stories} />;
+  } else if (route.section === 'explore') {
+    screen = <ExploreScreen completed={progress.completed} stories={stories} />;
+  } else if (route.section === 'timeline') {
+    screen = <TimelineScreen completed={progress.completed} />;
   } else if (route.section === 'plan') {
     screen = <PlanScreen deadline={deadline} onDeadlineChange={handleDeadlineChange} plan={plan} />;
   } else {

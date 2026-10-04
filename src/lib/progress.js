@@ -67,6 +67,26 @@ export function toggleChapter({ completed, log }, bookName, chapter, now = new D
   };
 }
 
+// Whole-number percent that never reads 0% once you've started or 100% before you've finished.
+export function percentRead(read, total) {
+  if (total === 0 || read === 0) return 0;
+  if (read >= total) return 100;
+  return Math.min(99, Math.max(1, Math.floor((read / total) * 100)));
+}
+
+// A book's read chapters as sorted runs: [1, 2, 3, 16, ..., 30] -> [{ from: 1, to: 3 }, { from: 16, to: 30 }].
+export function readRanges(chapters = []) {
+  const runs = [];
+  for (const chapter of [...chapters].sort((a, b) => a - b)) {
+    const last = runs[runs.length - 1];
+    if (last && last.to === chapter - 1) last.to = chapter;
+    else runs.push({ from: chapter, to: chapter });
+  }
+  return runs;
+}
+
+export const formatRuns = (runs) => runs.map(({ from, to }) => (from === to ? `${from}` : `${from}–${to}`)).join(', ');
+
 export function countCompleted(completed) {
   return Object.values(completed).reduce((sum, chapters) => sum + chapters.length, 0);
 }

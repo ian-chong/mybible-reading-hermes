@@ -7,9 +7,11 @@ export const paths = {
   bible: '#/bible',
   book: (name) => `#/bible/${encodeURIComponent(name)}`,
   read: (name, chapter) => `#/read/${encodeURIComponent(name)}/${chapter}`,
+  explore: '#/explore',
   stories: '#/stories',
   story: (id) => `#/stories/${encodeURIComponent(id)}`,
   storyStep: (id, step) => `#/stories/${encodeURIComponent(id)}/${step}`,
+  timeline: '#/timeline',
   plan: '#/plan',
 };
 
@@ -20,8 +22,12 @@ export function parseRoute(hash) {
       return { section: 'bible', book: first };
     case 'read':
       return { section: 'read', book: first, chapter: Number(second) };
+    case 'explore':
+      return { section: 'explore' };
     case 'stories':
       return { section: 'stories', storyId: first, step: Number(second) };
+    case 'timeline':
+      return { section: 'timeline' };
     case 'plan':
       return { section: 'plan' };
     default:

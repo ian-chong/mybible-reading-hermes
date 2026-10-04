@@ -25,7 +25,7 @@ test('loads with Tailwind styles applied', async ({ page }) => {
 })
 
 test('no horizontal scroll and touch targets are at least 44px', async ({ page }) => {
-  for (const path of ['/', '/#/bible', '/#/bible/Genesis', '/#/read/Genesis/1', '/#/plan', '/#/stories', '/#/stories/moses', '/#/stories/moses/1']) {
+  for (const path of ['/', '/#/bible', '/#/bible/Genesis', '/#/read/Genesis/1', '/#/plan', '/#/explore', '/#/timeline', '/#/stories', '/#/stories/moses', '/#/stories/moses/1']) {
     await page.goto(path)
     await page.waitForLoadState('networkidle')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true)
@@ -59,7 +59,7 @@ test('read a chapter from the Bible tab and mark it read', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Genesis 2' })).toBeVisible()
   await page.goBack()
   await page.goBack()
-  await expect(page.getByRole('link', { name: 'Chapter 1, read' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Chapters read: 1 of 50' })).toBeVisible()
 
   // Today reflects it, and it survives a reload.
   await page.goto('/')
@@ -125,7 +125,7 @@ test('reading a story step marks its chapter in the main plan, and reset unmarks
 
   // The chapter shows as read in the Bible tab too.
   await page.goto('/#/bible/Exodus')
-  await expect(page.getByRole('link', { name: 'Chapter 2, read' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Chapters read: 2 of 40' })).toBeVisible()
 
   // Resetting the story removes its own marks: chapter 2 is unread again,
   // the plan counts drop back, and the step list starts over.
@@ -147,7 +147,7 @@ test('reading a story step marks its chapter in the main plan, and reset unmarks
   await page.getByRole('button', { name: 'Tap again to reset' }).click()
   await expect(page.getByText('0 of 28 passages')).toBeVisible()
   await page.goto('/#/bible/Exodus')
-  await expect(page.getByRole('link', { name: 'Chapter 2, read' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Chapters read: 2 of 40' })).toBeVisible()
 })
 
 test('reading every step completes the story', async ({ page }) => {
@@ -188,4 +188,92 @@ test('story step screens deep-link and restore, and bad routes fall back', async
   await expect(page.getByRole('heading', { name: 'Moses', level: 1 })).toBeVisible()
   await page.goto('/#/stories/nobody')
   await expect(page.getByRole('heading', { name: 'Stories', level: 1 })).toBeVisible()
+})
+
+// Seeds read chapters directly, as if they had been read on earlier days.
+const seedProgress = (page, completed) =>
+  page.addInitScript((value) => {
+    if (!localStorage.getItem('bibleReadingProgress')) localStorage.setItem('bibleReadingProgress', JSON.stringify(value))
+  }, completed)
+
+test('Bible tab shows each book as a percentage and maps where in a book you have read', async ({ page }) => {
+  await seedProgress(page, { Ruth: [3, 4], Genesis: [1] })
+  await page.goto('/#/bible')
+
+  await expect(page.getByRole('heading', { name: 'Whole Bible' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Ruth\s*2\/4\s*50%/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Genesis\s*1\/50\s*2%/ })).toBeVisible()
+
+  // Reading the last two of Ruth's four chapters lights the right half of the map.
+  await page.getByRole('link', { name: /^Ruth/ }).click()
+  await expect(page.getByRole('img', { name: 'Chapters read: 3–4 of 4' })).toBeVisible()
+  await expect(page.getByText('Read: chapters 3–4')).toBeVisible()
+  const run = page.getByTestId('chapter-map-run')
+  await expect(run).toHaveCount(1)
+  await expect(run).toHaveAttribute('style', /left: 50%; width: 50%/)
+
+  // Only the unread chapters are listed as cards; the read ones sit behind a disclosure.
+  const unread = page.locator('section:has(#unread-heading)')
+  await expect(page.getByText('Not yet read · 2')).toBeVisible()
+  await expect(unread.getByRole('link')).toHaveText([/1/, /2/])
+  await expect(page.getByRole('link', { name: 'Chapter 3, read' })).toBeHidden()
+  await page.getByText('Read chapters · 2').click()
+  await expect(page.getByRole('link', { name: 'Chapter 3, read' })).toBeVisible()
+
+  // A card opens that chapter in the reader.
+  await page.getByRole('link', { name: 'Chapter 2', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Ruth 2' })).toBeVisible()
+})
+
+test('a finished book says so instead of listing chapters', async ({ page }) => {
+  await seedProgress(page, { Jude: [1] })
+  await page.goto('/#/bible/Jude')
+  await expect(page.getByText('Jude complete')).toBeVisible()
+  await expect(page.getByText(/Not yet read/)).toHaveCount(0)
+})
+
+test('Timeline lists all 66 books in written order and opens a book', async ({ page }) => {
+  await seedProgress(page, { Ruth: [1, 2] })
+  await page.goto('/')
+  await nav(page).getByRole('link', { name: 'Explore' }).click()
+  await page.getByRole('link', { name: /^Timeline/ }).click()
+  await expect(page.getByRole('heading', { name: 'Timeline', level: 1 })).toBeVisible()
+  await expect(nav(page).getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+
+  const books = page.locator('main ol li a')
+  await expect(books).toHaveCount(66)
+  const names = await books.locator('span.font-serif').allTextContents()
+  expect(new Set(names).size).toBe(66)
+  expect(names[0]).toBe('Job')
+  expect(names.at(-1)).toBe('Revelation')
+  expect(names.indexOf('Malachi')).toBeLessThan(names.indexOf('James'))
+  expect(names.indexOf('Galatians')).toBeLessThan(names.indexOf('Matthew'))
+
+  // Each book carries its date and progress; tapping opens it in the Bible tab, and the browser Back button returns.
+  const ruth = page.getByRole('link', { name: /^Ruth/ })
+  await expect(ruth).toContainText('c. 1010–970 BC')
+  await expect(ruth).toContainText('50%')
+  await ruth.click()
+  await expect(page.getByRole('heading', { name: 'Ruth', level: 1 })).toBeVisible()
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'Timeline', level: 1 })).toBeVisible()
+})
+
+test('Explore offers Stories and Timeline as ways to read, with progress on each', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('bibleReadingStories', JSON.stringify({ moses: { steps: [1], newlyMarked: [] } }))
+    localStorage.setItem('bibleReadingProgress', JSON.stringify({ Exodus: [2], Ruth: [1] }))
+  })
+  await page.goto('/')
+  await nav(page).getByRole('link', { name: 'Explore' }).click()
+  await expect(page.getByRole('heading', { name: 'Explore', level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Stories/ })).toContainText('1 of 33 started')
+  await expect(page.getByRole('link', { name: /^Timeline/ })).toContainText('2 of 66 books started')
+
+  // Stories sits inside Explore: the tab stays lit, and Back returns to the menu.
+  await page.getByRole('link', { name: /^Stories/ }).click()
+  await expect(page.getByRole('heading', { name: 'Stories', level: 1 })).toBeVisible()
+  await expect(nav(page).getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'Explore', level: 1 })).toBeVisible()
 })

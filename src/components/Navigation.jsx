@@ -1,11 +1,11 @@
-import { BookOpenText, CalendarCheck, Scroll, SunHorizon } from '@phosphor-icons/react';
+import { BookOpenText, CalendarCheck, Compass, SunHorizon } from '@phosphor-icons/react';
 import Link from './Link';
 import { paths } from '../lib/router';
 
 const tabs = [
   { id: 'today', label: 'Today', to: paths.today, Icon: SunHorizon },
   { id: 'bible', label: 'Bible', to: paths.bible, Icon: BookOpenText },
-  { id: 'stories', label: 'Stories', to: paths.stories, Icon: Scroll },
+  { id: 'explore', label: 'Explore', to: paths.explore, Icon: Compass },
   { id: 'plan', label: 'Plan', to: paths.plan, Icon: CalendarCheck },
 ];
 

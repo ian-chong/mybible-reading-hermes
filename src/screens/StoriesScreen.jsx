@@ -13,7 +13,7 @@ const testaments = [
 export default function StoriesScreen({ stories }) {
   return (
     <>
-      <AppBar title="Stories" subtitle="The Bible, read through its people" />
+      <AppBar title="Stories" subtitle="The Bible, read through its people" backTo={paths.explore} backDesktop={false} />
 
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-5 sm:px-6">
         {testaments
