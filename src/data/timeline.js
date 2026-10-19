@@ -1,6 +1,6 @@
-// All 66 books in the order they were written, using traditional (conservative) dating.
-// Most dates are approximate and some are debated; `marker` is the year shown on the timeline,
-// `date` the fuller range. Order within a shared marker follows the usual traditional sequence.
+// The story of the Bible, era by era. Each era says what happens, where to start reading,
+// and which books belong to it (set in it or written during it), so all 66 appear exactly once.
+// Book dates are when each was written, using traditional (conservative) dating; most are approximate.
 const OT = [
   ['Job', '2000 BC', 'Date unknown; set in the patriarchal era, c. 2000 BC', 'Unknown'],
   ['Genesis', '1446 BC', 'c. 1446–1406 BC', 'Moses'],
@@ -73,9 +73,79 @@ const NT = [
   ['Revelation', 'AD 95', 'c. AD 95', 'John'],
 ];
 
-const toEntry = ([book, marker, date, author]) => ({ book, marker, date, author });
+// Who wrote each book and when, keyed by book name.
+export const bookInfo = new Map([...OT, ...NT].map(([book, , date, author]) => [book, { date, author }]));
 
-export const timelineEras = [
-  { id: 'OT', label: 'Old Testament', span: 'c. 2000–425 BC', entries: OT.map(toEntry) },
-  { id: 'NT', label: 'New Testament', span: 'c. AD 45–95', entries: NT.map(toEntry) },
+export const eras = [
+  {
+    id: 'creation', title: 'Creation', span: 'The beginning', testament: 'OT', icon: 'Tree',
+    hook: 'God speaks the world into being, makes humanity in his image, and watches it unravel: the fall, a flood, and a tower built to reach heaven.',
+    start: ['Genesis', 1], books: ['Genesis'],
+  },
+  {
+    id: 'patriarchs', title: 'Patriarchs', span: 'c. 2100–1800 BC', testament: 'OT', icon: 'Users',
+    hook: 'One family is chosen to bless the world. Abraham walks by faith, Jacob wrestles with God, Joseph goes from pit to palace, and Job asks why the righteous suffer.',
+    start: ['Genesis', 12], books: ['Job'],
+  },
+  {
+    id: 'exodus', title: 'Exodus', span: 'c. 1446–1406 BC', testament: 'OT', icon: 'LinkBreak',
+    hook: 'Slaves in Egypt cry out and God answers: ten plagues, the Red Sea parted, the Law given at Sinai, and forty years wandering in the wilderness.',
+    start: ['Exodus', 1], books: ['Exodus', 'Leviticus', 'Numbers', 'Deuteronomy'],
+  },
+  {
+    id: 'conquest', title: 'Conquest', span: 'c. 1406–1375 BC', testament: 'OT', icon: 'Flag',
+    hook: 'Joshua leads Israel across the Jordan. The walls of Jericho fall, and the promised land is finally theirs.',
+    start: ['Joshua', 1], books: ['Joshua'],
+  },
+  {
+    id: 'judges', title: 'Judges', span: 'c. 1375–1050 BC', testament: 'OT', icon: 'Gavel',
+    hook: 'Everyone does what is right in their own eyes. Israel falls away again and again, and God raises up Deborah, Gideon and Samson to rescue them. In the middle of it, Ruth\'s quiet loyalty.',
+    start: ['Judges', 1], books: ['Judges', 'Ruth'],
+  },
+  {
+    id: 'kingdom', title: 'Kingdom', span: 'c. 1050–930 BC', testament: 'OT', icon: 'Crown',
+    hook: 'Israel asks for a king. Saul rises and falls, a shepherd boy kills a giant and becomes King David, and Solomon builds the temple. The songs and wisdom of Israel are written here.',
+    start: ['1 Samuel', 1], books: ['1 Samuel', '2 Samuel', '1 Chronicles', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon'],
+  },
+  {
+    id: 'divided', title: 'Divided Kingdom', span: 'c. 930–586 BC', testament: 'OT', icon: 'ArrowsSplit',
+    hook: 'The kingdom splits in two. Kings come and go, mostly bad, while prophets like Elijah, Isaiah and Jeremiah warn, plead and promise a coming Messiah.',
+    start: ['1 Kings', 12], books: ['1 Kings', '2 Kings', '2 Chronicles', 'Obadiah', 'Joel', 'Jonah', 'Amos', 'Hosea', 'Isaiah', 'Micah', 'Nahum', 'Zephaniah', 'Habakkuk', 'Jeremiah'],
+  },
+  {
+    id: 'exile', title: 'Exile', span: '586–538 BC', testament: 'OT', icon: 'Suitcase',
+    hook: 'Jerusalem burns and its people are carried off to Babylon. In a foreign land, Daniel stays faithful in the lions\' den, and Ezekiel sees dry bones live again.',
+    start: ['Daniel', 1], books: ['Lamentations', 'Ezekiel', 'Daniel'],
+  },
+  {
+    id: 'return', title: 'Return', span: '538–430 BC', testament: 'OT', icon: 'HouseLine',
+    hook: 'The exiles come home. They rebuild the temple and Jerusalem\'s walls, and in Persia, Queen Esther risks her life to save her people.',
+    start: ['Ezra', 1], books: ['Ezra', 'Nehemiah', 'Esther', 'Haggai', 'Zechariah', 'Malachi'],
+  },
+  {
+    id: 'silence', title: 'Silence', span: 'c. 430–5 BC', testament: 'OT', icon: 'SpeakerSlash',
+    hook: 'About 400 years with no new prophet. Empires rise and fall: Persia, Greece, then Rome. Israel waits for the Messiah that Malachi promised.',
+    start: null, books: [],
+  },
+  {
+    id: 'gospels', title: 'Gospels', span: 'c. 5 BC–AD 30', testament: 'NT', icon: 'Cross',
+    hook: 'The promise arrives. Jesus is born, heals, teaches, is crucified, and rises from the dead. Four eyewitness accounts tell his story.',
+    start: ['Luke', 1], books: ['Matthew', 'Mark', 'Luke', 'John'],
+  },
+  {
+    id: 'church', title: 'Church', span: 'c. AD 30–62', testament: 'NT', icon: 'Church',
+    hook: 'The Spirit comes at Pentecost and the church is born. A persecutor named Saul meets Jesus on the road and becomes Paul.',
+    start: ['Acts', 1], books: ['Acts'],
+  },
+  {
+    id: 'letters', title: 'Missions', span: 'c. AD 45–95', testament: 'NT', icon: 'GlobeHemisphereWest',
+    hook: 'The good news spreads across the Roman world. Paul, Peter, James, John and Jude write letters to young churches facing real problems.',
+    start: ['Romans', 1],
+    books: ['Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians', '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James', '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude'],
+  },
+  {
+    id: 'future', title: 'Future', span: 'Still to come', testament: 'NT', icon: 'Hourglass',
+    hook: 'John\'s vision of the end: evil defeated, every tear wiped away, and a new heaven and a new earth where God lives with his people.',
+    start: ['Revelation', 1], books: ['Revelation'],
+  },
 ];

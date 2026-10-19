@@ -26,8 +26,8 @@ export default function ExploreScreen({ completed, stories }) {
       to: paths.timeline,
       Icon: Hourglass,
       title: 'Timeline',
-      description: 'All 66 books in the order they were written, from Job and Moses to Revelation.',
-      status: booksStarted ? `${booksStarted} of ${books.length} books started` : `${books.length} books, c. 2000 BC to AD 95`,
+      description: 'The story of the Bible era by era, from Creation and the Exodus to the Gospels and the end of time.',
+      status: booksStarted ? `${booksStarted} of ${books.length} books started` : `14 eras, ${books.length} books`,
     },
   ];
 

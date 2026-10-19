@@ -4,7 +4,6 @@ import { books, TOTAL_CHAPTERS } from '../data/books';
 const STORAGE_KEY = 'bibleReadingProgress'; // { [bookName]: number[] }
 const LOG_KEY = 'bibleReadingLog'; // { 'yyyy-MM-dd': ['Genesis 1', ...] } — chapters read on each day
 const DEADLINE_KEY = 'bibleReadingDeadline';
-export const DEFAULT_DEADLINE = '2026-10-14'; // 14 October 2026
 
 // localStorage can throw (private mode, blocked storage), so reads fall back to defaults.
 function read(key, fallback) {
@@ -35,7 +34,14 @@ export function saveProgress({ completed, log }) {
   write(LOG_KEY, log);
 }
 
-export const loadDeadline = () => read(DEADLINE_KEY, DEFAULT_DEADLINE);
+// First visit: aim to finish a year from today, saved so the target doesn't drift day by day.
+export function loadDeadline(now = new Date()) {
+  const saved = read(DEADLINE_KEY, null);
+  if (saved) return saved;
+  const deadline = dayKey(addDays(now, 365));
+  write(DEADLINE_KEY, deadline);
+  return deadline;
+}
 export const saveDeadline = (deadline) => write(DEADLINE_KEY, deadline);
 
 export function isChapterRead(completed, bookName, chapter) {

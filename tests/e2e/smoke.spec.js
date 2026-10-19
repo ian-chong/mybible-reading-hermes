@@ -232,7 +232,7 @@ test('a finished book says so instead of listing chapters', async ({ page }) => 
   await expect(page.getByText(/Not yet read/)).toHaveCount(0)
 })
 
-test('Timeline lists all 66 books in written order and opens a book', async ({ page }) => {
+test('Timeline tells the story era by era, covers all 66 books once, and opens a book', async ({ page }) => {
   await seedProgress(page, { Ruth: [1, 2] })
   await page.goto('/')
   await nav(page).getByRole('link', { name: 'Explore' }).click()
@@ -240,17 +240,24 @@ test('Timeline lists all 66 books in written order and opens a book', async ({ p
   await expect(page.getByRole('heading', { name: 'Timeline', level: 1 })).toBeVisible()
   await expect(nav(page).getByRole('link', { name: 'Explore' })).toHaveAttribute('aria-current', 'page')
 
-  const books = page.locator('main ol li a')
-  await expect(books).toHaveCount(66)
-  const names = await books.locator('span.font-serif').allTextContents()
-  expect(new Set(names).size).toBe(66)
-  expect(names[0]).toBe('Job')
-  expect(names.at(-1)).toBe('Revelation')
-  expect(names.indexOf('Malachi')).toBeLessThan(names.indexOf('James'))
-  expect(names.indexOf('Galatians')).toBeLessThan(names.indexOf('Matthew'))
+  const eras = await page.locator('main h2').allTextContents()
+  expect(eras[0]).toBe('Creation')
+  expect(eras.at(-1)).toBe('Future')
+  expect(eras.indexOf('Exile')).toBeLessThan(eras.indexOf('Gospels'))
 
-  // Each book carries its date and progress; tapping opens it in the Bible tab, and the browser Back button returns.
-  const ruth = page.getByRole('link', { name: /^Ruth/ })
+  const books = page.getByTestId('timeline-book')
+  await expect(books).toHaveCount(66)
+  const names = await books.locator('span.font-medium').allTextContents()
+  expect(new Set(names).size).toBe(66)
+
+  // Each era invites you in, with a hook and a place to start.
+  await expect(page.getByText(/Joshua leads Israel across the Jordan/)).toBeVisible()
+  await page.getByRole('link', { name: 'Start at Exodus 1' }).click()
+  await expect(page.getByRole('heading', { name: 'Exodus 1' })).toBeVisible()
+  await page.goBack()
+
+  // Books carry their date and progress; tapping opens it in the Bible tab, and Back returns.
+  const ruth = books.filter({ hasText: 'Ruth' })
   await expect(ruth).toContainText('c. 1010–970 BC')
   await expect(ruth).toContainText('50%')
   await ruth.click()

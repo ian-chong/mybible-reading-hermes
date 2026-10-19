@@ -20,7 +20,7 @@ function App() {
   useScrollRestoration(route.key);
 
   const [progress, setProgress] = useState(loadProgress);
-  const [deadline, setDeadline] = useState(loadDeadline);
+  const [deadline, setDeadline] = useState(() => loadDeadline());
   const [stories, setStories] = useState(loadStories);
   const plan = computePlan(progress, deadline);
 
