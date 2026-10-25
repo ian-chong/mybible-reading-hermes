@@ -13,6 +13,8 @@ function withSteps(story) {
   const steps = story.acts.flatMap((act) => act.steps);
   return {
     ...story,
+    key: story.id,
+    source: `story:${story.id}`,
     steps: steps.map((step) => ({ ...step, ...parseRef(step.ref) })),
   };
 }

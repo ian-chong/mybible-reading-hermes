@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppleLogo, CloudCheck, CloudSlash, CloudArrowUp, DownloadSimple, EnvelopeSimple, GoogleLogo } from '@phosphor-icons/react';
+import { AppleLogo, CloudCheck, CloudSlash, CloudArrowUp, DownloadSimple, EnvelopeSimple, GoogleLogo, MicrosoftOutlookLogo } from '@phosphor-icons/react';
 import { accountsEnabled, authProviders, deleteAccount, loadProfile, saveProfile, signInWithEmail, signInWithProvider } from '../lib/supabase';
 
 const card = 'rounded-2xl border border-border bg-card p-5';
@@ -68,6 +68,12 @@ function SignIn({ state }) {
             <button type="button" onClick={() => withProvider('google')} className={button}>
               <GoogleLogo size={18} weight="bold" aria-hidden />
               Continue with Google
+            </button>
+          )}
+          {authProviders.includes('azure') && (
+            <button type="button" onClick={() => withProvider('azure')} className={button}>
+              <MicrosoftOutlookLogo size={18} weight="fill" aria-hidden />
+              Continue with Outlook
             </button>
           )}
           {authProviders.includes('apple') && (

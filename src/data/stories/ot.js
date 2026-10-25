@@ -349,6 +349,74 @@ export const OT_STORIES = [
     ],
   },
   {
+    id: 'deborah',
+    name: 'Deborah',
+    epithet: 'The Mother in Israel',
+    testament: 'OT',
+    summary:
+      'A prophetess judging Israel under a palm tree, who summons a hesitant general to war and sings of the day the stars fought from heaven — while the victory falls to a tent-dwelling woman named Jael.',
+    acts: [
+      {
+        title: 'Act I — A judge under the palm tree',
+        steps: [
+          { title: 'Deborah calls Barak', ref: 'Judges 4:1-10' },
+        ],
+      },
+      {
+        title: 'Act II — The battle and the song',
+        steps: [
+          { title: 'Jael and the tent peg', ref: 'Judges 4:11-24' },
+          { title: 'The song of Deborah', ref: 'Judges 5:1-18' },
+          { title: 'So let all thine enemies perish', ref: 'Judges 5:19-31' },
+        ],
+      },
+      {
+        title: 'Act III — The New Testament looks back',
+        steps: [
+          { title: 'Barak in the hall of faith', ref: 'Hebrews 11:32-34' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'gideon',
+    name: 'Gideon',
+    epithet: 'The Reluctant Warrior',
+    testament: 'OT',
+    summary:
+      'The least man of the weakest family, threshing wheat in hiding, called a mighty man of valour — who asks for sign after sign, wins with three hundred men and lamps in pitchers, then makes an ephod that becomes a snare.',
+    acts: [
+      {
+        title: 'Act I — The call',
+        steps: [
+          { title: 'Midian oppresses Israel', ref: 'Judges 6:1-10' },
+          { title: 'Thou mighty man of valour', ref: 'Judges 6:11-24' },
+          { title: 'Throwing down Baal\'s altar', ref: 'Judges 6:25-32' },
+          { title: 'The fleece', ref: 'Judges 6:33-40' },
+        ],
+      },
+      {
+        title: 'Act II — Three hundred men',
+        steps: [
+          { title: 'Too many people', ref: 'Judges 7:1-8' },
+          { title: 'The sword of the LORD, and of Gideon', ref: 'Judges 7:9-25' },
+        ],
+      },
+      {
+        title: 'Act III — The snare',
+        steps: [
+          { title: 'The ephod and the end', ref: 'Judges 8:22-35' },
+        ],
+      },
+      {
+        title: 'Act IV — The New Testament looks back',
+        steps: [
+          { title: 'Gideon in the hall of faith', ref: 'Hebrews 11:32-34' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'samson',
     name: 'Samson',
     epithet: 'The Broken Nazarite',
@@ -417,6 +485,53 @@ export const OT_STORIES = [
         title: 'Act IV — The New Testament looks back',
         steps: [
           { title: 'Ruth in the line of Christ', ref: 'Matthew 1:1-6' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'samuel',
+    name: 'Samuel',
+    epithet: 'The Kingmaker',
+    testament: 'OT',
+    summary:
+      'Asked of the LORD by a weeping mother and lent to Him for life, the boy who heard God call in the night becomes the last judge, the prophet who anoints Israel\'s first two kings.',
+    acts: [
+      {
+        title: 'Act I — Asked of the LORD',
+        steps: [
+          { title: 'Hannah\'s prayer', ref: '1 Samuel 1:1-20' },
+          { title: 'Lent to the LORD', ref: '1 Samuel 1:21-28' },
+          { title: 'Hannah\'s song', ref: '1 Samuel 2:1-11' },
+        ],
+      },
+      {
+        title: 'Act II — The boy who listened',
+        steps: [
+          { title: 'Speak; for thy servant heareth', ref: '1 Samuel 3:1-21' },
+          { title: 'Hitherto hath the LORD helped us', ref: '1 Samuel 7:3-17' },
+        ],
+      },
+      {
+        title: 'Act III — Make us a king',
+        steps: [
+          { title: 'They have rejected me', ref: '1 Samuel 8:1-22' },
+          { title: 'Samuel anoints Saul', ref: '1 Samuel 10:1-8' },
+          { title: 'Samuel\'s farewell', ref: '1 Samuel 12:1-25' },
+        ],
+      },
+      {
+        title: 'Act IV — The heart, not the height',
+        steps: [
+          { title: 'To obey is better than sacrifice', ref: '1 Samuel 15:10-35' },
+          { title: 'The LORD looketh on the heart', ref: '1 Samuel 16:1-13' },
+        ],
+      },
+      {
+        title: 'Act V — The New Testament looks back',
+        steps: [
+          { title: 'All the prophets from Samuel', ref: 'Acts 3:22-26' },
+          { title: 'Samuel in the hall of faith', ref: 'Hebrews 11:32-34' },
         ],
       },
     ],
@@ -652,6 +767,94 @@ export const OT_STORIES = [
     ],
   },
   {
+    id: 'elisha',
+    name: 'Elisha',
+    epithet: 'The Double Portion',
+    testament: 'OT',
+    summary:
+      'A farmer called from the plough by a mantle thrown over his shoulders, who asks for a double portion of Elijah\'s spirit and fills Israel with miracles of mercy — oil, bread, a child raised, a leper cleansed.',
+    acts: [
+      {
+        title: 'Act I — The mantle',
+        steps: [
+          { title: 'Called from the plough', ref: '1 Kings 19:19-21' },
+          { title: 'A double portion', ref: '2 Kings 2:1-14' },
+          { title: 'Healing the waters', ref: '2 Kings 2:15-25' },
+        ],
+      },
+      {
+        title: 'Act II — Miracles of mercy',
+        steps: [
+          { title: 'The widow\'s oil', ref: '2 Kings 4:1-7' },
+          { title: 'The Shunammite\'s son', ref: '2 Kings 4:8-37' },
+          { title: 'Death in the pot', ref: '2 Kings 4:38-44' },
+          { title: 'Naaman the leper', ref: '2 Kings 5:1-19' },
+          { title: 'Gehazi\'s greed', ref: '2 Kings 5:20-27' },
+          { title: 'The iron did swim', ref: '2 Kings 6:1-7' },
+          { title: 'Horses and chariots of fire', ref: '2 Kings 6:8-23' },
+        ],
+      },
+      {
+        title: 'Act III — Even in death',
+        steps: [
+          { title: 'Elisha\'s last word and his bones', ref: '2 Kings 13:14-21' },
+        ],
+      },
+      {
+        title: 'Act IV — The New Testament looks back',
+        steps: [
+          { title: 'Jesus remembers Naaman', ref: 'Luke 4:23-30' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'jeremiah',
+    name: 'Jeremiah',
+    epithet: 'The Weeping Prophet',
+    testament: 'OT',
+    summary:
+      'Called before he was born to a message no one wanted, Jeremiah is beaten, imprisoned and thrown into a pit for forty years of warnings — and watches Jerusalem fall, still promising a new covenant written on the heart.',
+    acts: [
+      {
+        title: 'Act I — The call',
+        steps: [
+          { title: 'Before I formed thee', ref: 'Jeremiah 1:1-19' },
+        ],
+      },
+      {
+        title: 'Act II — An unwelcome message',
+        steps: [
+          { title: 'The temple sermon', ref: 'Jeremiah 7:1-15' },
+          { title: 'The potter\'s house', ref: 'Jeremiah 18:1-12' },
+          { title: 'A burning fire shut up in my bones', ref: 'Jeremiah 20:1-18' },
+        ],
+      },
+      {
+        title: 'Act III — Hope in the ruins',
+        steps: [
+          { title: 'A new covenant', ref: 'Jeremiah 31:31-40' },
+          { title: 'Buying a field in a falling land', ref: 'Jeremiah 32:6-27' },
+        ],
+      },
+      {
+        title: 'Act IV — The fall of Jerusalem',
+        steps: [
+          { title: 'The king burns the scroll', ref: 'Jeremiah 36:1-32' },
+          { title: 'In the dungeon', ref: 'Jeremiah 38:1-13' },
+          { title: 'Jerusalem falls', ref: 'Jeremiah 39:1-18' },
+          { title: 'Great is thy faithfulness', ref: 'Lamentations 3:19-33' },
+        ],
+      },
+      {
+        title: 'Act V — The New Testament looks back',
+        steps: [
+          { title: 'The new covenant fulfilled', ref: 'Hebrews 8:6-13' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'esther',
     name: 'Esther',
     epithet: 'The Queen for Such a Time',
@@ -756,6 +959,45 @@ export const OT_STORIES = [
         title: 'Act III — The New Testament looks back',
         steps: [
           { title: 'The sign of the prophet Jonas', ref: 'Matthew 12:38-42' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'nehemiah',
+    name: 'Nehemiah',
+    epithet: 'The Wall Builder',
+    testament: 'OT',
+    summary:
+      'A cupbearer in the Persian palace who weeps over Jerusalem\'s broken walls, prays before he speaks to the king, and rebuilds the city in fifty-two days with a trowel in one hand and a sword in the other.',
+    acts: [
+      {
+        title: 'Act I — The burden',
+        steps: [
+          { title: 'Nehemiah weeps and prays', ref: 'Nehemiah 1:1-11' },
+          { title: 'A prayer before the king', ref: 'Nehemiah 2:1-8' },
+          { title: 'Let us rise up and build', ref: 'Nehemiah 2:9-20' },
+        ],
+      },
+      {
+        title: 'Act II — The wall',
+        steps: [
+          { title: 'A sword and a trowel', ref: 'Nehemiah 4:1-23' },
+          { title: 'Justice for the poor', ref: 'Nehemiah 5:1-19' },
+          { title: 'I am doing a great work', ref: 'Nehemiah 6:1-16' },
+        ],
+      },
+      {
+        title: 'Act III — The people',
+        steps: [
+          { title: 'The joy of the LORD is your strength', ref: 'Nehemiah 8:1-12' },
+          { title: 'Remember me, O my God', ref: 'Nehemiah 13:15-31' },
+        ],
+      },
+      {
+        title: 'Act IV — The New Testament looks back',
+        steps: [
+          { title: 'A city which hath foundations', ref: 'Hebrews 11:13-16' },
         ],
       },
     ],

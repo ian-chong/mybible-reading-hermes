@@ -10,7 +10,7 @@ export const supabase = url && key ? createClient(url, key, { auth: { flowType: 
 
 export const accountsEnabled = Boolean(supabase);
 
-// Social sign-in buttons to show, e.g. "google,apple" — each must be set up in Supabase first.
+// Social sign-in buttons to show, e.g. "google,azure" (azure = Microsoft/Outlook) — each must be set up in Supabase first.
 // Email sign-in links always work.
 export const authProviders = (import.meta.env?.VITE_AUTH_PROVIDERS ?? '').split(',').map((p) => p.trim()).filter(Boolean);
 
@@ -20,8 +20,13 @@ const redirectTo = () => `${window.location.origin}/`;
 export const signInWithEmail = (email) =>
   supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
 
+// Microsoft (Outlook/Hotmail/Microsoft 365) is the 'azure' provider and only returns the
+// email address when asked for it.
 export const signInWithProvider = (provider) =>
-  supabase.auth.signInWithOAuth({ provider, options: { redirectTo: redirectTo() } });
+  supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: redirectTo(), ...(provider === 'azure' ? { scopes: 'email' } : {}) },
+  });
 
 export const signOut = () => supabase.auth.signOut();
 

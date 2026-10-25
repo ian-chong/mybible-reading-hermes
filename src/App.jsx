@@ -2,20 +2,29 @@ import { useCallback, useMemo, useState } from 'react';
 import { SideNav, TabBar } from './components/Navigation';
 import { booksByName } from './data/books';
 import { storyById, storyList } from './data/stories';
+import { patternById, patternList } from './data/patterns';
 import { computePlan, isChapterRead } from './lib/progress';
 import { activeRun, deriveProgress, loadState, recordChapter, runHistory, saveState, setDeadline, startNewRun } from './lib/store';
 import { markStepRead, storyProgress } from './lib/stories';
 import { useAccount } from './lib/useAccount';
-import { useRoute, useScrollRestoration } from './lib/router';
+import { paths, useRoute, useScrollRestoration } from './lib/router';
 import BibleScreen from './screens/BibleScreen';
 import ExploreScreen from './screens/ExploreScreen';
 import PlanScreen from './screens/PlanScreen';
 import ReaderScreen from './screens/ReaderScreen';
 import StoriesScreen from './screens/StoriesScreen';
 import StoryScreen from './screens/StoryScreen';
+import PatternsScreen from './screens/PatternsScreen';
 import StoryStepScreen from './screens/StoryStepScreen';
 import TimelineScreen from './screens/TimelineScreen';
 import TodayScreen from './screens/TodayScreen';
+
+const patternLinks = {
+  back: paths.patterns,
+  step: paths.patternStep,
+  complete: (p) => ({ title: 'Pattern complete', text: `You've read the type and its antitype: ${p.name}.` }),
+};
+const patternStepLinks = { overview: paths.pattern, step: paths.patternStep, finishLabel: 'Finish pattern' };
 
 function App() {
   const route = useRoute();
@@ -23,7 +32,7 @@ function App() {
 
   const [state, setState] = useState(() => loadState());
   const progress = useMemo(() => deriveProgress(state), [state]);
-  const stories = useMemo(() => storyProgress(state, storyList), [state]);
+  const stories = useMemo(() => storyProgress(state, [...storyList, ...patternList]), [state]);
   const deadline = activeRun(state).deadline;
   const plan = computePlan(progress, deadline);
 
@@ -52,13 +61,15 @@ function App() {
 
   const book = route.book ? booksByName.get(route.book) : undefined;
   const story = route.storyId ? storyById.get(route.storyId) : undefined;
+  const pattern = route.patternId ? patternById.get(route.patternId) : undefined;
+  const isPatternStep = route.section === 'patterns' && pattern && route.step >= 1 && route.step <= pattern.steps.length;
   const isReader = route.section === 'read' && book && route.chapter >= 1 && route.chapter <= book.chapters;
   const isStoryStep = route.section === 'stories' && story && route.step >= 1 && route.step <= story.steps.length;
   // Stories and Timeline are reading methods inside Explore.
   const activeTab =
     isReader || route.section === 'bible'
       ? 'bible'
-      : ['explore', 'stories', 'timeline'].includes(route.section)
+      : ['explore', 'stories', 'patterns', 'timeline'].includes(route.section)
         ? 'explore'
         : route.section;
 
@@ -81,6 +92,14 @@ function App() {
     screen = <StoryScreen story={story} stories={stories} />;
   } else if (route.section === 'stories') {
     screen = <StoriesScreen stories={stories} />;
+  } else if (isPatternStep) {
+    screen = (
+      <StoryStepScreen key={route.key} story={pattern} step={route.step} onAdvance={handleAdvance} links={patternStepLinks} />
+    );
+  } else if (route.section === 'patterns' && pattern) {
+    screen = <StoryScreen story={pattern} stories={stories} links={patternLinks} />;
+  } else if (route.section === 'patterns') {
+    screen = <PatternsScreen stories={stories} />;
   } else if (route.section === 'explore') {
     screen = <ExploreScreen completed={progress.completed} stories={stories} />;
   } else if (route.section === 'timeline') {
@@ -91,7 +110,7 @@ function App() {
     screen = <TodayScreen progress={progress} plan={plan} />;
   }
 
-  const hidesTabBar = isReader || isStoryStep;
+  const hidesTabBar = isReader || isStoryStep || isPatternStep;
 
   return (
     <div className="min-h-dvh bg-background">

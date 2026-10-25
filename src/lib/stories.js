@@ -4,7 +4,7 @@
 import { isChapterRead } from './progress';
 import { deriveProgress, recordChapter, runStories, setRunStories } from './store';
 
-// { [storyId]: { steps: number[] } } — step numbers are 1-based.
+// { [story.key]: { steps: number[] } } — step numbers are 1-based. Patterns use 'pattern:<id>' keys.
 
 export function isStepRead(stories, storyId, step) {
   return Boolean(stories[storyId]?.steps?.includes(step));
@@ -22,9 +22,9 @@ export function storyProgress(state, storyList) {
       .map((_, i) => i + 1)
       .filter((n) => {
         const { book, chapter } = story.steps[n - 1];
-        return isStepRead(stories, story.id, n) || isChapterRead(completed, book.name, chapter);
+        return isStepRead(stories, story.key, n) || isChapterRead(completed, book.name, chapter);
       });
-    if (steps.length) view[story.id] = { steps };
+    if (steps.length) view[story.key] = { steps };
   }
   return view;
 }
@@ -32,15 +32,15 @@ export function storyProgress(state, storyList) {
 // Pure: records the step and, if its anchor chapter was unread, marks it in the reading log.
 export function markStepRead(state, story, step, now = new Date()) {
   const stories = runStories(state);
-  if (isStepRead(stories, story.id, step)) return state;
+  if (isStepRead(stories, story.key, step)) return state;
 
   const { book, chapter } = story.steps[step - 1];
   let next = state;
   // A chapter already read is not read again: re-reading never counts as new progress.
   if (!isChapterRead(deriveProgress(state).completed, book.name, chapter)) {
-    next = recordChapter(next, book.name, chapter, 'read', `story:${story.id}`, now);
+    next = recordChapter(next, book.name, chapter, 'read', story.source, now);
   }
 
-  const steps = [...(stories[story.id]?.steps ?? []), step].sort((a, b) => a - b);
-  return setRunStories(next, { ...stories, [story.id]: { steps } });
+  const steps = [...(stories[story.key]?.steps ?? []), step].sort((a, b) => a - b);
+  return setRunStories(next, { ...stories, [story.key]: { steps } });
 }

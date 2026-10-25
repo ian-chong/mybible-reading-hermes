@@ -409,6 +409,78 @@ export const NT_STORIES = [
     ],
   },
   {
+    id: 'stephen',
+    name: 'Stephen',
+    epithet: 'The First Martyr',
+    testament: 'NT',
+    summary:
+      'Chosen to serve tables, full of faith and power, Stephen retells Israel\'s whole story to the council that will kill him — and dies seeing heaven opened, praying for the men who stone him while young Saul holds their coats.',
+    acts: [
+      {
+        title: 'Act I — Full of faith and power',
+        steps: [
+          { title: 'Seven men of honest report', ref: 'Acts 6:1-7' },
+          { title: 'The face of an angel', ref: 'Acts 6:8-15' },
+        ],
+      },
+      {
+        title: 'Act II — Stephen\'s defence',
+        steps: [
+          { title: 'From Abraham to Joseph', ref: 'Acts 7:1-16' },
+          { title: 'Moses rejected', ref: 'Acts 7:17-36' },
+          { title: 'Ye stiffnecked', ref: 'Acts 7:37-53' },
+        ],
+      },
+      {
+        title: 'Act III — Heaven opened',
+        steps: [
+          { title: 'Lord Jesus, receive my spirit', ref: 'Acts 7:54-60' },
+          { title: 'Scattered abroad', ref: 'Acts 8:1-4' },
+        ],
+      },
+      {
+        title: 'Act IV — Paul remembers',
+        steps: [
+          { title: 'When the blood of thy martyr Stephen was shed', ref: 'Acts 22:17-21' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'barnabas',
+    name: 'Barnabas',
+    epithet: 'The Son of Consolation',
+    testament: 'NT',
+    summary:
+      'The encourager who sells his field for the church, vouches for the converted Saul when no one else will, and later refuses to give up on John Mark — a second chance that Paul himself comes to honour.',
+    acts: [
+      {
+        title: 'Act I — The encourager',
+        steps: [
+          { title: 'The son of consolation', ref: 'Acts 4:32-37' },
+          { title: 'Barnabas took him', ref: 'Acts 9:26-31' },
+        ],
+      },
+      {
+        title: 'Act II — The missionary',
+        steps: [
+          { title: 'A good man, full of the Holy Ghost', ref: 'Acts 11:19-30' },
+          { title: 'Separate me Barnabas and Saul', ref: 'Acts 13:1-12' },
+          { title: 'The gods are come down', ref: 'Acts 14:8-20' },
+          { title: 'The council at Jerusalem', ref: 'Acts 15:1-21' },
+        ],
+      },
+      {
+        title: 'Act III — A second chance',
+        steps: [
+          { title: 'The contention was so sharp', ref: 'Acts 15:36-41' },
+          { title: 'Marcus, sister\'s son to Barnabas', ref: 'Colossians 4:7-11' },
+          { title: 'He is profitable to me', ref: '2 Timothy 4:9-11' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'paul',
     name: 'Paul',
     epithet: 'Saul of Tarsus, the Apostle to the Gentiles',

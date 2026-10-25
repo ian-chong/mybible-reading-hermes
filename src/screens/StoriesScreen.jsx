@@ -27,7 +27,7 @@ export default function StoriesScreen({ stories }) {
               {storyList
                 .filter((story) => story.testament === id)
                 .map((story) => {
-                  const read = stories[story.id]?.steps?.length ?? 0;
+                  const read = stories[story.key]?.steps?.length ?? 0;
                   const done = read === story.steps.length;
                   return (
                     <li key={story.id}>

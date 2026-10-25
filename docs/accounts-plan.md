@@ -64,6 +64,35 @@ Replace the `{ book: chapters[] }` store with an event log; everything else is d
 ### Mobile app
 - Capacitor wrap; keep layouts mobile-first with safe-area insets and touch-sized targets.
 
+### Social sign-in (parked 2026-10-26)
+- Code is ready: buttons appear via Vercel env `VITE_AUTH_PROVIDERS` (e.g. `google,azure`). Email link works today.
+- **Google:** Google Cloud OAuth client (Web), redirect URI
+  `https://bvpupvgcuslepblvudzg.supabase.co/auth/v1/callback`, publish the consent screen.
+- **Outlook/Microsoft** (`azure`): Azure app registration for "any org + personal accounts",
+  same redirect URI, client secret expires ≤ 24 months (calendar a renewal).
+- **Apple:** skipped. Needed only if we ship an iPhone app (App Store rule 4.8).
+
+### More Stories (parked 2026-10-26)
+Added in batch 1: Deborah, Gideon, Samuel, Elisha, Jeremiah, Nehemiah, Stephen, Barnabas.
+Still to write:
+- OT: Sarah, Isaac, Rebekah, Aaron, Miriam, Caleb, Rahab, Hannah, Jonathan, Hezekiah, Josiah, Ezra
+- NT: Nicodemus, Lazarus, Priscilla & Aquila, James (brother of Jesus), John Mark, Zacchaeus
+
+### Types & Shadows: patterns to read up on (parked 2026-10-26)
+Batch 1 (21 patterns): Adam, Marriage, The Ark, Melchizedek, Hagar & Sarah, Isaac Offered,
+The Passover Lamb, The Red Sea, Manna, The Rock, The Tabernacle, The Veil, The High Priest,
+The Day of Atonement, Firstfruits, The Bronze Serpent, A Prophet Like Moses, Sabbath Rest,
+Circumcision, Elijah, The Temple.
+Rule: only links a New Testament verse explicitly makes. Still to review:
+- Abel's Blood (Gen 4 → Heb 12:24)
+- Jacob's Ladder (Gen 28 → John 1:51)
+- Moses' Veiled Face (Ex 34:29-35 → 2 Cor 3:7-18)
+- Without the Camp (Lev 16:27 → Heb 13:11-13)
+- Red Heifer (Num 19 → Heb 9:13-14)
+- The Sign of Jonah (Jonah 1–2 → Matt 12:39-41)
+- Wilderness Examples (Num 14, 25 → 1 Cor 10:6-11; Heb 3:7–4:2)
+- Separate idea: a "Prophecy Fulfilled" category (Joel 2 → Acts 2:16, Isaiah 53 → Acts 8:32, 2 Sam 7 → Acts 2:30)
+
 ### Translation picker
 - See the API.Bible / ESV plan (keys via Vercel env, proxied through a Vercel function);
   store the chosen translation on the profile.

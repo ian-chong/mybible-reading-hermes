@@ -7,7 +7,9 @@ import { navigate, paths } from '../lib/router';
 import { TRANSLATION, fetchCachedPassage } from '../utils/bibleApi';
 
 // Rendered with key={story+step}, so state starts fresh for every step.
-export default function StoryStepScreen({ story, step, onAdvance }) {
+const defaultLinks = { overview: paths.story, step: paths.storyStep };
+
+export default function StoryStepScreen({ story, step, onAdvance, links = defaultLinks }) {
   const stepData = story.steps[step - 1];
   const isLast = step === story.steps.length;
 
@@ -38,16 +40,16 @@ export default function StoryStepScreen({ story, step, onAdvance }) {
   // Moving on records the step (and its anchor chapter in the main plan), then navigates.
   const advance = () => {
     onAdvance(story, step);
-    if (isLast) navigate(paths.story(story.id));
-    else navigate(paths.storyStep(story.id, step + 1));
+    if (isLast) navigate(links.overview(story.id));
+    else navigate(links.step(story.id, step + 1));
   };
 
   return (
     <>
       <AppBar
         title={stepData.title}
-        subtitle={`${stepData.ref} · ${TRANSLATION}`}
-        backTo={paths.story(story.id)}
+        subtitle={`${stepData.label ? `${stepData.label} · ` : ''}${stepData.ref} · ${TRANSLATION}`}
+        backTo={links.overview(story.id)}
         backDesktop={false}
       />
 
@@ -103,7 +105,7 @@ export default function StoryStepScreen({ story, step, onAdvance }) {
         <div className="mx-auto flex max-w-[38rem] items-center gap-3 px-4 py-3">
           {step > 1 ? (
             <Link
-              to={paths.storyStep(story.id, step - 1)}
+              to={links.step(story.id, step - 1)}
               aria-label="Previous passage"
               className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border text-foreground transition-transform active:scale-95 hover:bg-muted"
             >
@@ -138,7 +140,7 @@ export default function StoryStepScreen({ story, step, onAdvance }) {
             {isLast ? (
               <>
                 <Check size={20} weight="bold" aria-hidden />
-                Finish story
+                {links.finishLabel ?? 'Finish story'}
               </>
             ) : (
               <>

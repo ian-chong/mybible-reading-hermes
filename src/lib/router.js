@@ -11,6 +11,9 @@ export const paths = {
   stories: '#/stories',
   story: (id) => `#/stories/${encodeURIComponent(id)}`,
   storyStep: (id, step) => `#/stories/${encodeURIComponent(id)}/${step}`,
+  patterns: '#/patterns',
+  pattern: (id) => `#/patterns/${encodeURIComponent(id)}`,
+  patternStep: (id, step) => `#/patterns/${encodeURIComponent(id)}/${step}`,
   timeline: '#/timeline',
   plan: '#/plan',
 };
@@ -26,6 +29,8 @@ export function parseRoute(hash) {
       return { section: 'explore' };
     case 'stories':
       return { section: 'stories', storyId: first, step: Number(second) };
+    case 'patterns':
+      return { section: 'patterns', patternId: first, step: Number(second) };
     case 'timeline':
       return { section: 'timeline' };
     case 'plan':
