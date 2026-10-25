@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { ArrowRight, Check, CheckCircle, Confetti } from '@phosphor-icons/react';
+import { ArrowRight, CheckCircle, Confetti } from '@phosphor-icons/react';
 import AppBar from '../components/AppBar';
 import ProgressBar from '../components/ProgressBar';
 import Link from '../components/Link';
@@ -10,7 +9,7 @@ function stepNumberOffset(acts, actIndex) {
   return acts.slice(0, actIndex).reduce((sum, act) => sum + act.steps.length, 0);
 }
 
-export default function StoryScreen({ story, stories, onReset }) {
+export default function StoryScreen({ story, stories }) {
   const read = stories[story.id]?.steps ?? [];
   const readCount = read.length;
   const done = readCount === story.steps.length;
@@ -98,44 +97,7 @@ export default function StoryScreen({ story, stories, onReset }) {
           })}
         </div>
 
-        {readCount > 0 && <ResetButton onReset={() => onReset(story.id)} />}
       </div>
     </>
-  );
-}
-
-// Two-tap confirm: the first tap arms the button, the second commits the reset.
-function ResetButton({ onReset }) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!armed) return;
-    const disarm = () => setArmed(false);
-    window.addEventListener('click', disarm);
-    return () => window.removeEventListener('click', disarm);
-  }, [armed]);
-
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (armed) onReset();
-        else setArmed(true);
-      }}
-      className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold transition-colors ${
-        armed
-          ? 'bg-destructive text-white'
-          : 'border border-destructive/40 text-destructive hover:bg-destructive/10'
-      }`}
-    >
-      {armed ? (
-        <>
-          <Check size={18} weight="bold" aria-hidden />
-          Tap again to reset
-        </>
-      ) : (
-        'Reset story'
-      )}
-    </button>
   );
 }

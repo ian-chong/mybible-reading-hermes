@@ -1,76 +1,10 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfDay, subDays } from 'date-fns';
 import { books, TOTAL_CHAPTERS } from '../data/books';
 
-const STORAGE_KEY = 'bibleReadingProgress'; // { [bookName]: number[] }
-const LOG_KEY = 'bibleReadingLog'; // { 'yyyy-MM-dd': ['Genesis 1', ...] } — chapters read on each day
-const DEADLINE_KEY = 'bibleReadingDeadline';
-
-// localStorage can throw (private mode, blocked storage), so reads fall back to defaults.
-function read(key, fallback) {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Progress still works for this session; it just won't persist.
-  }
-}
-
 export const dayKey = (date) => format(date, 'yyyy-MM-dd');
-
-export function loadProgress() {
-  return { completed: read(STORAGE_KEY, {}), log: read(LOG_KEY, {}) };
-}
-
-export function saveProgress({ completed, log }) {
-  write(STORAGE_KEY, completed);
-  write(LOG_KEY, log);
-}
-
-// First visit: aim to finish a year from today, saved so the target doesn't drift day by day.
-export function loadDeadline(now = new Date()) {
-  const saved = read(DEADLINE_KEY, null);
-  if (saved) return saved;
-  const deadline = dayKey(addDays(now, 365));
-  write(DEADLINE_KEY, deadline);
-  return deadline;
-}
-export const saveDeadline = (deadline) => write(DEADLINE_KEY, deadline);
 
 export function isChapterRead(completed, bookName, chapter) {
   return Boolean(completed[bookName]?.includes(chapter));
-}
-
-// Returns new objects so React sees the change.
-export function toggleChapter({ completed, log }, bookName, chapter, now = new Date()) {
-  const id = `${bookName} ${chapter}`;
-
-  if (isChapterRead(completed, bookName, chapter)) {
-    const nextCompleted = { ...completed };
-    const chapters = completed[bookName].filter((c) => c !== chapter);
-    if (chapters.length) nextCompleted[bookName] = chapters;
-    else delete nextCompleted[bookName];
-
-    const nextLog = Object.fromEntries(
-      Object.entries(log)
-        .map(([day, ids]) => [day, ids.filter((x) => x !== id)])
-        .filter(([, ids]) => ids.length > 0),
-    );
-    return { completed: nextCompleted, log: nextLog };
-  }
-
-  const today = dayKey(now);
-  return {
-    completed: { ...completed, [bookName]: [...(completed[bookName] || []), chapter].sort((a, b) => a - b) },
-    log: { ...log, [today]: [...(log[today] || []), id] },
-  };
 }
 
 // Whole-number percent that never reads 0% once you've started or 100% before you've finished.

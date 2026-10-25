@@ -1,95 +1,46 @@
-// Progress store for story sessions. Story reading counts toward the main plan by
-// marking each step's anchor chapter via toggleChapter; `newlyMarked` remembers
-// which chapters the story marked that were unread before, so a reset only ever
-// unmarks what the story itself added — chapters you read on your own stay read.
-import { toggleChapter } from './progress';
+// Story progress lives in the reading state, per run. Stories are an aid to reading the
+// Bible, not a separate record: reading a step logs its anchor chapter in the tracker, and
+// a chapter read in the tracker covers every step in it. Only the Plan reset clears them.
+import { isChapterRead } from './progress';
+import { deriveProgress, recordChapter, runStories, setRunStories } from './store';
 
-const STORIES_KEY = 'bibleReadingStories';
-
-// { [storyId]: { steps: number[], newlyMarked: string[] } } — step numbers are 1-based.
-function read() {
-  try {
-    const saved = localStorage.getItem(STORIES_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
-}
-
-function write(stories) {
-  try {
-    localStorage.setItem(STORIES_KEY, JSON.stringify(stories));
-  } catch {
-    // Story progress still works for this session; it just won't persist.
-  }
-}
-
-export function loadStories() {
-  return read();
-}
-
-export function saveStories(stories) {
-  write(stories);
-}
+// { [storyId]: { steps: number[] } } — step numbers are 1-based.
 
 export function isStepRead(stories, storyId, step) {
   return Boolean(stories[storyId]?.steps?.includes(step));
 }
 
-// Pure: returns { stories, progress } with the step recorded and, if its anchor
-// chapter was unread, the chapter marked in the main plan.
-export function markStepRead(stories, progress, story, step, now = new Date()) {
-  if (isStepRead(stories, story.id, step)) return { stories, progress };
+// The tracker is the master record: a step also counts as read when its anchor chapter
+// is read in this run, however it was read. Several steps can share one chapter, and
+// reading the chapter covers all of them. Returns the shape the story screens use.
+export function storyProgress(state, storyList) {
+  const stories = runStories(state);
+  const { completed } = deriveProgress(state);
+  const view = {};
+  for (const story of storyList) {
+    const steps = story.steps
+      .map((_, i) => i + 1)
+      .filter((n) => {
+        const { book, chapter } = story.steps[n - 1];
+        return isStepRead(stories, story.id, n) || isChapterRead(completed, book.name, chapter);
+      });
+    if (steps.length) view[story.id] = { steps };
+  }
+  return view;
+}
+
+// Pure: records the step and, if its anchor chapter was unread, marks it in the reading log.
+export function markStepRead(state, story, step, now = new Date()) {
+  const stories = runStories(state);
+  if (isStepRead(stories, story.id, step)) return state;
 
   const { book, chapter } = story.steps[step - 1];
-  const id = `${book.name} ${chapter}`;
-  const alreadyRead = (progress.completed[book.name] || []).includes(chapter);
-
-  let nextProgress = progress;
-  let newlyMarked = stories[story.id]?.newlyMarked ?? [];
-  if (!alreadyRead) {
-    nextProgress = toggleChapter(progress, book.name, chapter, now);
-    newlyMarked = [...newlyMarked, id];
+  let next = state;
+  // A chapter already read is not read again: re-reading never counts as new progress.
+  if (!isChapterRead(deriveProgress(state).completed, book.name, chapter)) {
+    next = recordChapter(next, book.name, chapter, 'read', `story:${story.id}`, now);
   }
 
   const steps = [...(stories[story.id]?.steps ?? []), step].sort((a, b) => a - b);
-  return {
-    stories: { ...stories, [story.id]: { steps, newlyMarked } },
-    progress: nextProgress,
-  };
-}
-
-// Pure: clears the story's step progress and unmarks only the chapters it added.
-export function resetStory(stories, progress, story, now = new Date()) {
-  const entry = stories[story.id];
-  if (!entry) return { stories, progress };
-
-  let nextProgress = progress;
-  for (const id of entry.newlyMarked) {
-    const [bookName, chapter] = [id.slice(0, id.lastIndexOf(' ')), Number(id.slice(id.lastIndexOf(' ') + 1))];
-    nextProgress = toggleChapter(nextProgress, bookName, chapter, now);
-  }
-
-  const nextStories = { ...stories };
-  delete nextStories[story.id];
-  return { stories: nextStories, progress: nextProgress };
-}
-
-// A manually unmarked chapter may still sit in some story's newlyMarked; strip it
-// so a later reset can't unmark a chapter you re-read by hand.
-export function stripNewlyMarked(stories, chapterId) {
-  let changed = false;
-  const next = {};
-  for (const [storyId, entry] of Object.entries(stories)) {
-    if (entry.newlyMarked?.includes(chapterId)) {
-      const newlyMarked = entry.newlyMarked.filter((id) => id !== chapterId);
-      next[storyId] = newlyMarked.length
-        ? { ...entry, newlyMarked }
-        : { steps: entry.steps ?? [], newlyMarked: [] };
-      changed = true;
-    } else {
-      next[storyId] = entry;
-    }
-  }
-  return changed ? next : stories;
+  return setRunStories(next, { ...stories, [story.id]: { steps } });
 }

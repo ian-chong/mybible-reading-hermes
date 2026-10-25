@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpenText, CaretDown, CaretRight, Check, CheckCircle, Confetti } from '@phosphor-icons/react';
+import { BookOpenText, CaretRight, Check, CheckCircle, Confetti, Eye, EyeSlash } from '@phosphor-icons/react';
 import AppBar from '../components/AppBar';
 import ChapterMap from '../components/ChapterMap';
 import ProgressBar from '../components/ProgressBar';
@@ -151,14 +151,37 @@ function ProgressSummary({ completed }) {
   );
 }
 
-// Inside a book: how much is read, where in the book it is, and the chapters still to read.
+// Remembered on this device so the chapter grid opens the way you left it.
+const HIDE_READ_KEY = 'bibleHideRead';
+function useHideRead() {
+  const [hide, setHide] = useState(() => {
+    try {
+      return localStorage.getItem(HIDE_READ_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const update = (value) => {
+    try {
+      localStorage.setItem(HIDE_READ_KEY, value ? '1' : '0');
+    } catch {
+      // Not remembered; the choice still applies for this visit.
+    }
+    setHide(value);
+  };
+  return [hide, update];
+}
+
+// Inside a book: how much is read, where in the book it is, and every chapter —
+// read ones in green and still tappable, so re-reading is always one tap away.
 function BookProgress({ book, completed }) {
   const read = completed[book.name] ?? [];
   const done = read.length === book.chapters;
   const runs = readRanges(read);
   const chapters = Array.from({ length: book.chapters }, (_, i) => i + 1);
-  const unread = chapters.filter((chapter) => !read.includes(chapter));
-  const readSorted = chapters.filter((chapter) => read.includes(chapter));
+  const unread = book.chapters - read.length;
+  const [hideRead, setHideRead] = useHideRead();
+  const visible = hideRead ? chapters.filter((chapter) => !read.includes(chapter)) : chapters;
 
   return (
     <div className="space-y-4">
@@ -180,56 +203,52 @@ function BookProgress({ book, completed }) {
         </p>
       </section>
 
-      {done ? (
+      {done && (
         <section className="rounded-2xl border border-border bg-card p-5 text-center">
           <Confetti size={40} weight="duotone" className="mx-auto text-primary" aria-hidden />
           <h2 className="mt-2 font-serif text-2xl font-semibold">{book.name} complete</h2>
-          <p className="mt-1 text-sm text-muted-foreground">You've read every chapter of this book.</p>
-        </section>
-      ) : (
-        <section aria-labelledby="unread-heading">
-          <h2 id="unread-heading" className="px-1 pb-2 text-sm font-medium text-muted-foreground">
-            Not yet read · {unread.length}
-          </h2>
-          <ol className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-            {unread.map((chapter) => (
-              <li key={chapter}>
-                <Link
-                  to={paths.read(book.name, chapter)}
-                  aria-label={`Chapter ${chapter}`}
-                  className="flex min-h-16 flex-col items-center justify-center rounded-2xl border border-border bg-card transition-transform hover:border-primary active:scale-95"
-                >
-                  <span aria-hidden className="text-xs text-muted-foreground">Chapter</span>
-                  <span className="text-2xl leading-tight font-semibold tabular-nums">{chapter}</span>
-                </Link>
-              </li>
-            ))}
-          </ol>
+          <p className="mt-1 text-sm text-muted-foreground">You've read every chapter of this book. Tap any chapter to read it again.</p>
         </section>
       )}
 
-      {readSorted.length > 0 && (
-        <details className="group rounded-2xl border border-border bg-card">
-          <summary className="flex min-h-14 list-none items-center justify-between gap-3 px-5 font-medium [&::-webkit-details-marker]:hidden">
-            Read chapters · {readSorted.length}
-            <CaretDown size={18} className="shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden />
-          </summary>
-          <ol className="grid grid-cols-5 gap-2 px-5 pb-5 sm:grid-cols-8">
-            {readSorted.map((chapter) => (
+      <section aria-labelledby="chapters-heading">
+        <div className="flex items-center justify-between gap-3 px-1 pb-2">
+          <h2 id="chapters-heading" className="text-sm font-medium text-muted-foreground">
+            {hideRead ? `Not yet read · ${unread}` : `Chapters · ${book.chapters}`}
+          </h2>
+          {read.length > 0 && (
+            <button
+              type="button"
+              aria-pressed={hideRead}
+              onClick={() => setHideRead(!hideRead)}
+              className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              {hideRead ? <Eye size={18} aria-hidden /> : <EyeSlash size={18} aria-hidden />}
+              {hideRead ? 'Show read' : 'Hide read'}
+            </button>
+          )}
+        </div>
+        <ol className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+          {visible.map((chapter) => {
+            const isRead = read.includes(chapter);
+            return (
               <li key={chapter}>
                 <Link
                   to={paths.read(book.name, chapter)}
-                  aria-label={`Chapter ${chapter}, read`}
-                  className="relative flex aspect-square min-h-12 items-center justify-center rounded-xl bg-success text-lg font-semibold text-on-success tabular-nums transition-transform active:scale-95"
+                  aria-label={isRead ? `Chapter ${chapter}, read` : `Chapter ${chapter}`}
+                  className={`relative flex min-h-16 flex-col items-center justify-center rounded-2xl transition-transform active:scale-95 ${
+                    isRead ? 'bg-success text-on-success' : 'border border-border bg-card hover:border-primary'
+                  }`}
                 >
-                  {chapter}
-                  <Check size={12} weight="bold" className="absolute top-1.5 right-1.5" aria-hidden />
+                  <span aria-hidden className={`text-xs ${isRead ? '' : 'text-muted-foreground'}`}>Chapter</span>
+                  <span className="text-2xl leading-tight font-semibold tabular-nums">{chapter}</span>
+                  {isRead && <Check size={12} weight="bold" className="absolute top-1.5 right-1.5" aria-hidden />}
                 </Link>
               </li>
-            ))}
-          </ol>
-        </details>
-      )}
+            );
+          })}
+        </ol>
+      </section>
     </div>
   );
 }

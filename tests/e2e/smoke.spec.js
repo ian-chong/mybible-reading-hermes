@@ -115,10 +115,10 @@ test('reading a story step marks its chapter in the main plan, and reset unmarks
   await expect(page.getByRole('heading', { name: 'Fleeing to Midian' })).toBeVisible()
   await expect(page.getByText('Step 2 of 28')).toBeVisible()
 
-  // The anchor chapter now counts toward the main plan: Today shows 1 read today,
-  // and the story overview shows the step as read.
+  // The anchor chapter now counts toward the main plan: Today shows 1 read today.
+  // The tracker is the master record, so step 2 (also Exodus 2) counts as read too.
   await page.goto('/#/stories/moses')
-  await expect(page.getByText('1 of 28 passages')).toBeVisible()
+  await expect(page.getByText('2 of 28 passages')).toBeVisible()
   await page.goto('/')
   await expect(page.getByText('1 of 1,189 chapters')).toBeVisible()
   await expect(page.getByText('1-day streak')).toBeVisible()
@@ -139,13 +139,17 @@ test('reading a story step marks its chapter in the main plan, and reset unmarks
   // A chapter read by hand is untouched by a later story mark + reset.
   await page.goto('/#/read/Exodus/2')
   await page.getByRole('button', { name: 'Mark as read' }).click()
+  // Reading Exodus 2 in the tracker covers the story's steps 1 and 2 as well.
   await page.goto('/#/stories/moses')
-  await page.getByRole('link', { name: /Start reading/ }).click()
+  await expect(page.getByText('2 of 28 passages')).toBeVisible()
+  await page.goto('/#/stories/moses/3')
   await page.getByRole('button', { name: 'Next passage' }).click()
   await page.goto('/#/stories/moses')
+  await expect(page.getByText('3 of 28 passages')).toBeVisible()
   await page.getByRole('button', { name: 'Reset story' }).click()
   await page.getByRole('button', { name: 'Tap again to reset' }).click()
-  await expect(page.getByText('0 of 28 passages')).toBeVisible()
+  // Exodus 2 stays read in the tracker, so the steps it covers stay read too.
+  await expect(page.getByText('2 of 28 passages')).toBeVisible()
   await page.goto('/#/bible/Exodus')
   await expect(page.getByRole('img', { name: 'Chapters read: 2 of 40' })).toBeVisible()
 })

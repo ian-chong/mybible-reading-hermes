@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SideNav, TabBar } from './components/Navigation';
 import { booksByName } from './data/books';
-import { storyById } from './data/stories';
-import { computePlan, loadDeadline, loadProgress, saveDeadline, saveProgress, toggleChapter } from './lib/progress';
-import { loadStories, markStepRead, resetStory, saveStories, stripNewlyMarked } from './lib/stories';
+import { storyById, storyList } from './data/stories';
+import { computePlan, isChapterRead } from './lib/progress';
+import { activeRun, deriveProgress, loadState, recordChapter, runHistory, saveState, setDeadline, startNewRun } from './lib/store';
+import { markStepRead, storyProgress } from './lib/stories';
+import { useAccount } from './lib/useAccount';
 import { useRoute, useScrollRestoration } from './lib/router';
 import BibleScreen from './screens/BibleScreen';
 import ExploreScreen from './screens/ExploreScreen';
@@ -19,44 +21,34 @@ function App() {
   const route = useRoute();
   useScrollRestoration(route.key);
 
-  const [progress, setProgress] = useState(loadProgress);
-  const [deadline, setDeadline] = useState(() => loadDeadline());
-  const [stories, setStories] = useState(loadStories);
+  const [state, setState] = useState(() => loadState());
+  const progress = useMemo(() => deriveProgress(state), [state]);
+  const stories = useMemo(() => storyProgress(state, storyList), [state]);
+  const deadline = activeRun(state).deadline;
   const plan = computePlan(progress, deadline);
 
+  // Applies fn to the latest state and saves it (also used by background sync).
+  const commit = useCallback((fn) => {
+    setState((prev) => {
+      const next = fn(prev);
+      saveState(next);
+      return next;
+    });
+  }, []);
+  const update = (next) => commit(() => next);
+  const account = useAccount(state, commit);
+
   const handleToggleChapter = (bookName, chapter) => {
-    const next = toggleChapter(progress, bookName, chapter);
-    // A manually unmarked chapter must leave every story's newlyMarked, so a later
-    // reset can't unmark a chapter you re-read by hand.
-    const nextStories = stripNewlyMarked(stories, `${bookName} ${chapter}`);
-    saveProgress(next);
-    saveStories(nextStories);
-    setProgress(next);
-    setStories(nextStories);
+    const action = isChapterRead(progress.completed, bookName, chapter) ? 'unread' : 'read';
+    update(recordChapter(state, bookName, chapter, action));
   };
 
-  const handleDeadlineChange = (value) => {
-    setDeadline(value);
-    saveDeadline(value);
-  };
+  const handleDeadlineChange = (value) => update(setDeadline(state, value));
 
-  const handleAdvance = (story, step) => {
-    const next = markStepRead(stories, progress, story, step);
-    saveStories(next.stories);
-    saveProgress(next.progress);
-    setStories(next.stories);
-    setProgress(next.progress);
-  };
+  const handleAdvance = (story, step) => update(markStepRead(state, story, step));
 
-  const handleResetStory = (storyId) => {
-    const story = storyById.get(storyId);
-    if (!story) return;
-    const next = resetStory(stories, progress, story);
-    saveStories(next.stories);
-    saveProgress(next.progress);
-    setStories(next.stories);
-    setProgress(next.progress);
-  };
+  // The one reset: ends this run (kept in history) and starts a fresh one.
+  const handleStartOver = (newDeadline) => update(startNewRun(state, newDeadline));
 
   const book = route.book ? booksByName.get(route.book) : undefined;
   const story = route.storyId ? storyById.get(route.storyId) : undefined;
@@ -86,7 +78,7 @@ function App() {
   } else if (isStoryStep) {
     screen = <StoryStepScreen key={route.key} story={story} step={route.step} onAdvance={handleAdvance} />;
   } else if (route.section === 'stories' && story) {
-    screen = <StoryScreen story={story} stories={stories} onReset={handleResetStory} />;
+    screen = <StoryScreen story={story} stories={stories} />;
   } else if (route.section === 'stories') {
     screen = <StoriesScreen stories={stories} />;
   } else if (route.section === 'explore') {
@@ -94,7 +86,7 @@ function App() {
   } else if (route.section === 'timeline') {
     screen = <TimelineScreen completed={progress.completed} />;
   } else if (route.section === 'plan') {
-    screen = <PlanScreen deadline={deadline} onDeadlineChange={handleDeadlineChange} plan={plan} />;
+    screen = <PlanScreen deadline={deadline} onDeadlineChange={handleDeadlineChange} plan={plan} runs={runHistory(state)} onStartOver={handleStartOver} account={account} state={state} />;
   } else {
     screen = <TodayScreen progress={progress} plan={plan} />;
   }
