@@ -1,36 +1,43 @@
-// src/utils/bibleApi.js
-// Fetch Bible text from a free API (bible-api.com). We use the King James Version, which is
-// public domain; NKJV, NIV and NLT are copyrighted and need a publisher licence.
+// Scripture text: the King James Version (1769, public domain), served from this site as
+// one JSON file per book (public/bible/kjv/<n>.json, built by scripts/build-kjv.mjs).
+// The service worker keeps those files on the device, so reading works offline.
+import { books } from '../data/books';
+import { parseRef } from '../data/stories';
+
 export const TRANSLATION = 'King James Version';
 
-// Returns { reference, verses: [{ verse, text }] }. Throws on network/HTTP errors
-// so the caller can show an error state.
-export async function fetchPassage(reference) {
-  const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}?translation=kjv`);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+export const bookUrl = (book) => `/bible/kjv/${books.indexOf(book) + 1}.json`;
+
+// One request per book, shared for the session; failures are dropped so they can be retried.
+const bookCache = new Map();
+function loadBook(book) {
+  if (!bookCache.has(book)) {
+    const request = fetch(bookUrl(book))
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .catch((error) => {
+        bookCache.delete(book);
+        throw error;
+      });
+    bookCache.set(book, request);
   }
-  const data = await response.json();
-  const verses = data.verses.map(v => ({ verse: v.verse, text: v.text.trim() }));
-  return { reference: data.reference, verses };
+  return bookCache.get(book);
 }
 
-// Passages are cached for the session, so going back/forward between chapters is instant.
-// Failed requests are dropped from the cache so they can be retried.
-const cache = new Map();
-
-// Any reference bible-api.com understands: "Genesis 1", "Exodus 2:1-10", "John 3:16-21".
-export function fetchCachedPassage(reference) {
-  if (!cache.has(reference)) {
-    cache.set(reference, fetchPassage(reference).catch((error) => {
-      cache.delete(reference);
-      throw error;
-    }));
-  }
-  return cache.get(reference);
+// "Genesis 1", "Exodus 2:1-10" or "Hebrews 11:7" -> { reference, verses: [{ verse, text }] }.
+// Throws on a bad reference or a failed download, so the caller can show an error state.
+export async function fetchCachedPassage(reference) {
+  const ref = parseRef(reference);
+  if (!ref) throw new Error(`Unknown reference: ${reference}`);
+  const { chapters } = await loadBook(ref.book);
+  const all = chapters[ref.chapter - 1].map((text, i) => ({ verse: i + 1, text }));
+  const from = ref.from ?? 1;
+  const to = ref.to ?? (ref.from ? ref.from : all.length);
+  return { reference, verses: all.slice(from - 1, to) };
 }
 
-// bible-api.com returns every verse of a chapter when given "Book N".
 export function fetchChapter(bookName, chapterNum) {
   return fetchCachedPassage(`${bookName} ${chapterNum}`);
 }

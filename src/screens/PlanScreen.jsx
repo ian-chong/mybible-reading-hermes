@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { addDays, format, isToday, parseISO } from 'date-fns';
 import { ArrowCounterClockwise, CheckCircle } from '@phosphor-icons/react';
 import AccountCard from '../components/AccountCard';
+import OfflineCard from '../components/OfflineCard';
 import AppBar from '../components/AppBar';
 import { TOTAL_CHAPTERS } from '../data/books';
 import { dayKey } from '../lib/progress';
@@ -74,12 +75,14 @@ export default function PlanScreen({ deadline, onDeadlineChange, plan, runs, onS
 
         <AccountCard account={account} state={state} />
 
+        <OfflineCard />
+
         <StartOver plan={plan} onStartOver={onStartOver} />
 
         {runs.length > 0 && <RunHistory runs={runs} />}
 
         <p className="px-1 text-center text-xs text-muted-foreground">
-          Scripture text: {TRANSLATION} via bible-api.com.
+          Scripture text: {TRANSLATION} (1769), public domain.
         </p>
       </div>
     </>

@@ -7,6 +7,8 @@ import { computePlan, isChapterRead } from './lib/progress';
 import { activeRun, deriveProgress, loadState, recordChapter, runHistory, saveState, setDeadline, startNewRun } from './lib/store';
 import { markStepRead, storyProgress } from './lib/stories';
 import { useAccount } from './lib/useAccount';
+import { useOfflineBible, useOnline } from './lib/offline';
+import { WifiSlash } from '@phosphor-icons/react';
 import { paths, useRoute, useScrollRestoration } from './lib/router';
 import BibleScreen from './screens/BibleScreen';
 import ExploreScreen from './screens/ExploreScreen';
@@ -46,6 +48,8 @@ function App() {
   }, []);
   const update = (next) => commit(() => next);
   const account = useAccount(state, commit);
+  const online = useOnline();
+  const offlineBible = useOfflineBible();
 
   const handleToggleChapter = (bookName, chapter) => {
     const action = isChapterRead(progress.completed, bookName, chapter) ? 'unread' : 'read';
@@ -120,6 +124,17 @@ function App() {
         {screen}
       </main>
       {!hidesTabBar && <TabBar active={activeTab} />}
+      {!online && (
+        <div
+          role="status"
+          className="pointer-events-none fixed inset-x-0 top-[calc(0.5rem+env(safe-area-inset-top))] z-50 flex justify-center px-4"
+        >
+          <span className="flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background shadow-lg">
+            <WifiSlash size={16} weight="bold" aria-hidden />
+            {offlineBible.status === 'ready' ? 'Offline — reading from your saved Bible' : 'Offline'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
